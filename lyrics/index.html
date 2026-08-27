@@ -24,14 +24,36 @@ footer{height:9%;min-height:54px;padding:0 34px;box-sizing:border-box;display:fl
 (function(){
 'use strict';
 var TOPIC='tlx-b3598dd35e2ab18ef1e2dc84';
-var state=null, lines=[], lastTrack='', lastEnvelopeTime=0;
+var state=null, lines=[], lastTrack='', lastEnvelopeTime=0, lyricsSource='';
 var titleEl=document.getElementById('title'),artistEl=document.getElementById('artist'),statusEl=document.getElementById('status'),lyricsEl=document.getElementById('lyrics'),fillEl=document.getElementById('fill'),timeEl=document.getElementById('time');
 function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function fmt(ms){ms=Math.max(0,Math.floor(ms/1000));return Math.floor(ms/60)+':'+String(ms%60).padStart(2,'0')}
-function position(){if(!state)return 0;var p=Number(state.elapsed)||0;if(state.playing&&lastEnvelopeTime){p+=Math.max(0,Date.now()-lastEnvelopeTime*1000)};var d=Number(state.duration)||0;if(d>0)p=Math.min(p,d);return Math.max(0,p+(Number(state.offset)||0))}
-function parseLrc(s){var out=[];String(s||'').split(/\r?\n/).forEach(function(row){var m=row.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s?(.*)$/);if(m)out.push({t:(parseInt(m[1],10)*60+parseFloat(m[2]))*1000,text:m[3]||' '})});return out}
+function position(){if(!state)return 0;var p=Number(state.elapsed)||0;if(state.playing&&lastEnvelopeTime){p+=Math.max(0,Date.now()-lastEnvelopeTime*1000)}var d=Number(state.duration)||0;if(d>0)p=Math.min(p,d);return Math.max(0,p+(Number(state.offset)||0))}
+function parseLrc(s){var out=[];String(s||'').split(/\r?\n/).forEach(function(row){var m=row.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s?(.*)$/);if(m){var text=(m[3]||' ').replace(/<\d+:\d+(?:\.\d+)?>/g,'').trim();out.push({t:(parseInt(m[1],10)*60+parseFloat(m[2]))*1000,text:text||' '})}});return out}
 function render(){var p=position(),d=state?Number(state.duration)||0:0;timeEl.textContent=fmt(Math.max(0,p-(Number(state&&state.offset)||0)))+' / '+fmt(d);fillEl.style.width=d>0?Math.min(100,Math.max(0,p/d*100))+'%':'0%';if(!lines.length)return;var idx=0;for(var i=0;i<lines.length;i++){if(lines[i].t<=p)idx=i;else break}var html='';for(var j=idx-4;j<=idx+4;j++){if(j<0||j>=lines.length){html+='<div class="line">&nbsp;</div>';continue}var cls='line'+(j===idx?' active':Math.abs(j-idx)<=1?' near':'');html+='<div class="'+cls+'">'+esc(lines[j].text||' ')+'</div>'}lyricsEl.innerHTML=html}
-async function loadLyrics(s){lines=[];lyricsEl.innerHTML='<div class="line active">正在匹配歌词…</div>';var q='track_name='+encodeURIComponent(s.title||'')+'&artist_name='+encodeURIComponent(s.artist||'');if(s.album)q+='&album_name='+encodeURIComponent(s.album);if(Number(s.duration)>0)q+='&duration='+Math.round(Number(s.duration)/1000);var url='https://lrclib.net/api/get?'+q;try{var r=await fetch(url,{headers:{'Lrclib-Client':'TeslaLyrics/1.0 (https://hanz316.github.io/lyrics/)'}});if(!r.ok)throw new Error('not found');var x=await r.json();lines=parseLrc(x.syncedLyrics);if(!lines.length)throw new Error('no synced lyrics');render()}catch(e){try{var r2=await fetch('https://lrclib.net/api/search?track_name='+encodeURIComponent(s.title||'')+'&artist_name='+encodeURIComponent(s.artist||''));var a=await r2.json();if(Array.isArray(a)&&a.length)lines=parseLrc(a[0].syncedLyrics)}catch(_){}if(!lines.length)lyricsEl.innerHTML='<div class="line active">未找到同步歌词</div>';render()}}
+function compact(s){return String(s||'').toLowerCase().replace(/[\s\-—_·•.,，。!！?？:：'"“”‘’/\\]/g,'')}
+function cleanTitle(s){var x=String(s||'').trim();x=x.replace(/\s*[（(【\[][^）)】\]]*[）)】\]]\s*$/g,'').trim();x=x.replace(/\s*[-–—]\s*(live|remix|cover|伴奏|纯音乐|现场版|完整版|dj版|mix).*$/i,'').trim();return x||String(s||'').trim()}
+function artistParts(s){var raw=String(s||'').trim();var a=raw.split(/\s*(?:\/|、|,|，|&|×|x|;|；| feat\.? | ft\.? | featuring )\s*/i).filter(function(v){return !!v});return a.length?a:[raw]}
+function scoreItem(x,s,ct,pa){if(!x||!x.syncedLyrics)return -99999;var sc=0,tn=compact(x.trackName||x.name),want=compact(ct),orig=compact(s.title),ar=compact(x.artistName),p=compact(pa);if(tn===want)sc+=130;else if(tn===orig)sc+=120;else if(tn.indexOf(want)>=0||want.indexOf(tn)>=0)sc+=70;if(p&&ar.indexOf(p)>=0)sc+=80;var d=Number(x.duration)||0,w=Number(s.duration||0)/1000;if(d&&w){var diff=Math.abs(d-w);if(diff<=2.5)sc+=90;else if(diff<=5)sc+=60;else if(diff<=10)sc+=25;else if(diff>25)sc-=80}if(x.albumName&&s.album&&compact(x.albumName)===compact(s.album))sc+=30;return sc}
+async function fetchJson(url){var r=await fetch(url,{headers:{'Lrclib-Client':'TeslaLyrics/2.0 (https://hanz316.github.io/lyrics/)'}});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}
+async function tryExact(base,s,title,artist,withAlbum){var q='track_name='+encodeURIComponent(title)+'&artist_name='+encodeURIComponent(artist);if(withAlbum&&s.album)q+='&album_name='+encodeURIComponent(s.album);if(Number(s.duration)>0)q+='&duration='+Math.round(Number(s.duration)/1000);try{var x=await fetchJson(base+'/api/get?'+q);var l=parseLrc(x&&x.syncedLyrics);if(l.length)return {lines:l,source:base.indexOf('karalyr')>=0?'Karalyr':'LRCLIB'}}catch(e){}return null}
+async function trySearch(s,ct,pa){var urls=[
+'https://lrclib.net/api/search?track_name='+encodeURIComponent(ct)+'&artist_name='+encodeURIComponent(pa),
+'https://lrclib.net/api/search?q='+encodeURIComponent(ct+' '+pa),
+'https://lrclib.net/api/search?track_name='+encodeURIComponent(ct)
+];var best=null,bestScore=-99999;for(var i=0;i<urls.length;i++){try{var a=await fetchJson(urls[i]);if(Array.isArray(a)){for(var j=0;j<a.length;j++){var sc=scoreItem(a[j],s,ct,pa);if(sc>bestScore){bestScore=sc;best=a[j]}}if(bestScore>=170)break}}catch(e){}}
+if(best&&best.syncedLyrics){var l=parseLrc(best.syncedLyrics);if(l.length)return {lines:l,source:'LRCLIB 搜索'}}return null}
+async function loadLyrics(s){lines=[];lyricsSource='';lyricsEl.innerHTML='<div class="line active">正在匹配歌词…</div>';var ct=cleanTitle(s.title),aps=artistParts(s.artist),pa=aps[0]||s.artist||'';var r=null;
+// 1) 完整元数据精确匹配
+r=await tryExact('https://lrclib.net',s,s.title||'',s.artist||'',true);
+// 2) 去掉网易云常见括号副标题，并只用主歌手
+if(!r&&(ct!==s.title||pa!==s.artist))r=await tryExact('https://lrclib.net',s,ct,pa,false);
+// 3) LRCLIB 多策略搜索并按歌名/歌手/时长重新评分，而不是盲取第一条
+if(!r)r=await trySearch(s,ct,pa);
+// 4) 第二个免费、无 Key、支持 CORS 的同步歌词库
+if(!r)r=await tryExact('https://karalyr.com',s,ct,pa,false);
+if(r){lines=r.lines;lyricsSource=r.source;statusEl.textContent=(s.playing?'播放中':'已暂停')+' · '+lyricsSource;render();return}
+lyricsEl.innerHTML='<div class="line active">未找到同步歌词</div><div class="line near">已尝试多个匹配方式</div>';render()}
 function acceptEnvelope(env){if(!env||env.event!=='message')return;var s;try{s=JSON.parse(env.message)}catch(e){return}lastEnvelopeTime=Number(env.time)||Math.floor(Date.now()/1000);state=s;titleEl.textContent=s.title||'未知歌曲';artistEl.textContent=(s.artist||'')+(s.source?' · '+s.source:'');statusEl.textContent=s.playing?'播放中':'已暂停';var key=[s.title,s.artist,s.album,s.duration].join('|');if(key!==lastTrack){lastTrack=key;loadLyrics(s)}else render()}
 var es=new EventSource('https://ntfy.sh/'+TOPIC+'/sse?since=12h');es.onopen=function(){statusEl.textContent='已连接 · 等待播放器'};es.onmessage=function(e){try{acceptEnvelope(JSON.parse(e.data))}catch(_){}};es.onerror=function(){statusEl.textContent='连接中…'};
 setInterval(render,300);
