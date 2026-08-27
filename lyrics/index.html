@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Tesla Lyrics</title>
+<style>
+html,body{margin:0;height:100%;background:#090909;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",Arial,sans-serif;overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column}
+header{height:15%;min-height:92px;box-sizing:border-box;padding:20px 38px 8px;display:flex;align-items:center;justify-content:space-between}
+.track{min-width:0}.title{font-size:30px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.artist{font-size:18px;color:#aaa;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status{font-size:15px;color:#888;text-align:right}
+#lyrics{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:0 7%;box-sizing:border-box}.line{font-size:23px;line-height:1.28;text-align:center;color:#686868;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:none}.line.near{color:#999}.line.active{font-size:31px;font-weight:700;color:#fff}
+footer{height:9%;min-height:54px;padding:0 34px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;color:#777;font-size:14px}.bar{height:3px;background:#242424;position:absolute;left:34px;right:34px;bottom:42px}.fill{height:100%;background:#aaa;width:0%}
+</style>
+</head>
+<body>
+<div id="app">
+<header><div class="track"><div id="title" class="title">等待手机播放器</div><div id="artist" class="artist">Tesla Lyrics</div></div><div id="status" class="status">正在连接…</div></header>
+<div id="lyrics"></div>
+<div class="bar"><div id="fill" class="fill"></div></div>
+<footer><span id="time">0:00 / 0:00</span><span>TESLA LYRICS</span></footer>
+</div>
+<script>
+(function(){
+'use strict';
+var TOPIC='tlx-b3598dd35e2ab18ef1e2dc84';
+var state=null, lines=[], lastTrack='', lastEnvelopeTime=0;
+var titleEl=document.getElementById('title'),artistEl=document.getElementById('artist'),statusEl=document.getElementById('status'),lyricsEl=document.getElementById('lyrics'),fillEl=document.getElementById('fill'),timeEl=document.getElementById('time');
+function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function fmt(ms){ms=Math.max(0,Math.floor(ms/1000));return Math.floor(ms/60)+':'+String(ms%60).padStart(2,'0')}
+function position(){if(!state)return 0;var p=Number(state.elapsed)||0;if(state.playing&&lastEnvelopeTime){p+=Math.max(0,Date.now()-lastEnvelopeTime*1000)};var d=Number(state.duration)||0;if(d>0)p=Math.min(p,d);return Math.max(0,p+(Number(state.offset)||0))}
+function parseLrc(s){var out=[];String(s||'').split(/\r?\n/).forEach(function(row){var m=row.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s?(.*)$/);if(m)out.push({t:(parseInt(m[1],10)*60+parseFloat(m[2]))*1000,text:m[3]||' '})});return out}
+function render(){var p=position(),d=state?Number(state.duration)||0:0;timeEl.textContent=fmt(Math.max(0,p-(Number(state&&state.offset)||0)))+' / '+fmt(d);fillEl.style.width=d>0?Math.min(100,Math.max(0,p/d*100))+'%':'0%';if(!lines.length)return;var idx=0;for(var i=0;i<lines.length;i++){if(lines[i].t<=p)idx=i;else break}var html='';for(var j=idx-4;j<=idx+4;j++){if(j<0||j>=lines.length){html+='<div class="line">&nbsp;</div>';continue}var cls='line'+(j===idx?' active':Math.abs(j-idx)<=1?' near':'');html+='<div class="'+cls+'">'+esc(lines[j].text||' ')+'</div>'}lyricsEl.innerHTML=html}
+async function loadLyrics(s){lines=[];lyricsEl.innerHTML='<div class="line active">正在匹配歌词…</div>';var q='track_name='+encodeURIComponent(s.title||'')+'&artist_name='+encodeURIComponent(s.artist||'');if(s.album)q+='&album_name='+encodeURIComponent(s.album);if(Number(s.duration)>0)q+='&duration='+Math.round(Number(s.duration)/1000);var url='https://lrclib.net/api/get?'+q;try{var r=await fetch(url,{headers:{'Lrclib-Client':'TeslaLyrics/1.0 (https://hanz316.github.io/lyrics/)'}});if(!r.ok)throw new Error('not found');var x=await r.json();lines=parseLrc(x.syncedLyrics);if(!lines.length)throw new Error('no synced lyrics');render()}catch(e){try{var r2=await fetch('https://lrclib.net/api/search?track_name='+encodeURIComponent(s.title||'')+'&artist_name='+encodeURIComponent(s.artist||''));var a=await r2.json();if(Array.isArray(a)&&a.length)lines=parseLrc(a[0].syncedLyrics)}catch(_){}if(!lines.length)lyricsEl.innerHTML='<div class="line active">未找到同步歌词</div>';render()}}
+function acceptEnvelope(env){if(!env||env.event!=='message')return;var s;try{s=JSON.parse(env.message)}catch(e){return}lastEnvelopeTime=Number(env.time)||Math.floor(Date.now()/1000);state=s;titleEl.textContent=s.title||'未知歌曲';artistEl.textContent=(s.artist||'')+(s.source?' · '+s.source:'');statusEl.textContent=s.playing?'播放中':'已暂停';var key=[s.title,s.artist,s.album,s.duration].join('|');if(key!==lastTrack){lastTrack=key;loadLyrics(s)}else render()}
+var es=new EventSource('https://ntfy.sh/'+TOPIC+'/sse?since=12h');es.onopen=function(){statusEl.textContent='已连接 · 等待播放器'};es.onmessage=function(e){try{acceptEnvelope(JSON.parse(e.data))}catch(_){}};es.onerror=function(){statusEl.textContent='连接中…'};
+setInterval(render,300);
+})();
+</script>
+</body>
+</html>
