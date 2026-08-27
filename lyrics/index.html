@@ -6,35 +6,51 @@
 <title>Tesla Lyrics</title>
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;background:#070708;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","Microsoft YaHei",Arial,sans-serif}
-body:before{content:"";position:fixed;inset:-12%;pointer-events:none;background:radial-gradient(circle at 18% 18%,rgba(60,72,96,.20),transparent 34%),radial-gradient(circle at 82% 68%,rgba(72,50,82,.16),transparent 38%),linear-gradient(145deg,#101114 0%,#08090b 44%,#050506 100%);transform:translate3d(0,0,0) scale(1.02);animation:ambient 24s ease-in-out infinite alternate}
-body:after{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.018),transparent 28%,rgba(0,0,0,.18) 100%),radial-gradient(ellipse at center,transparent 48%,rgba(0,0,0,.32) 100%)}
-@keyframes ambient{from{transform:translate3d(-1.5%,-.6%,0) scale(1.02);opacity:.82}to{transform:translate3d(1.5%,.8%,0) scale(1.055);opacity:1}}
-#app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.18))}
+html,body{margin:0;height:100%;overflow:hidden;background:#06070a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","Microsoft YaHei",Arial,sans-serif}
+body:before{content:"";position:fixed;inset:-15%;pointer-events:none;background:
+radial-gradient(circle at 14% 18%,rgba(45,92,170,.42),transparent 31%),
+radial-gradient(circle at 84% 25%,rgba(126,58,164,.34),transparent 34%),
+radial-gradient(circle at 66% 84%,rgba(24,126,116,.30),transparent 34%),
+linear-gradient(145deg,#111624 0%,#090b12 44%,#08070d 72%,#050608 100%);
+transform:translate3d(0,0,0) scale(1.03);animation:ambient 20s ease-in-out infinite alternate}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent 28%,rgba(0,0,0,.16) 100%),radial-gradient(ellipse at center,transparent 48%,rgba(0,0,0,.38) 100%)}
+@keyframes ambient{0%{transform:translate3d(-1.8%,-.8%,0) scale(1.03);filter:saturate(.92);opacity:.86}100%{transform:translate3d(1.8%,1%,0) scale(1.075);filter:saturate(1.08);opacity:1}}
+#particles{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;opacity:.7}
+.p{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.72);box-shadow:0 0 10px rgba(120,170,255,.28);animation:floatP linear infinite}
+.p:nth-child(1){left:7%;top:72%;width:3px;height:3px;animation-duration:23s;animation-delay:-4s}.p:nth-child(2){left:18%;top:28%;animation-duration:28s;animation-delay:-12s}.p:nth-child(3){left:31%;top:82%;width:2px;height:2px;animation-duration:20s;animation-delay:-9s}.p:nth-child(4){left:43%;top:42%;width:3px;height:3px;animation-duration:31s;animation-delay:-16s}.p:nth-child(5){left:57%;top:73%;animation-duration:25s;animation-delay:-7s}.p:nth-child(6){left:69%;top:22%;width:2px;height:2px;animation-duration:29s;animation-delay:-18s}.p:nth-child(7){left:79%;top:62%;width:3px;height:3px;animation-duration:21s;animation-delay:-11s}.p:nth-child(8){left:91%;top:36%;width:2px;height:2px;animation-duration:27s;animation-delay:-6s}
+@keyframes floatP{0%{transform:translate3d(0,28px,0);opacity:0}15%{opacity:.55}50%{transform:translate3d(14px,-42px,0);opacity:.9}85%{opacity:.45}100%{transform:translate3d(-8px,-105px,0);opacity:0}}
+#app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.13))}
 header{height:15%;min-height:96px;padding:22px 42px 8px;display:flex;align-items:center;justify-content:space-between;gap:24px}
-.track{min-width:0;max-width:75%}.title{font-size:34px;line-height:1.15;font-weight:760;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 14px rgba(0,0,0,.35)}.artist{font-size:19px;color:rgba(255,255,255,.58);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status{font-size:14px;color:rgba(255,255,255,.42);text-align:right;white-space:nowrap}
-#lyrics{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 6.2%;overflow:hidden}
-#lyricsGroup{width:100%;display:flex;flex-direction:column;justify-content:center;gap:13px;transform:translate3d(0,0,0)}
-#lyricsGroup.step{animation:lyricsStep .30s cubic-bezier(.2,.7,.25,1)}
-@keyframes lyricsStep{0%{transform:translate3d(0,12px,0);opacity:.58}100%{transform:translate3d(0,0,0);opacity:1}}
-.line{height:50px;display:flex;align-items:center;justify-content:center;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 10px;font-size:32px;line-height:1.14;font-weight:520;color:rgba(255,255,255,.23);text-shadow:0 1px 10px rgba(0,0,0,.22);transform:translate3d(0,0,0);transition:opacity .28s ease,transform .28s ease,color .28s ease}
-.line.m2{font-size:30px;opacity:.32;transform:scale(.965)}
-.line.m1{font-size:38px;opacity:.58;transform:scale(.985)}
-.line.active{height:70px;font-size:56px;font-weight:780;opacity:1;color:#fff;letter-spacing:.1px;text-shadow:0 2px 18px rgba(0,0,0,.42),0 0 22px rgba(255,255,255,.07);animation:activeIn .30s cubic-bezier(.2,.7,.25,1)}
-.line.p1{font-size:40px;opacity:.62;transform:scale(.99)}
-.line.p2{font-size:34px;opacity:.38;transform:scale(.975)}
-.line.p3{font-size:30px;opacity:.22;transform:scale(.96)}
-@keyframes activeIn{0%{transform:scale(.985);opacity:.68}100%{transform:scale(1);opacity:1}}
-.empty{font-size:38px!important;opacity:.9!important;color:#fff!important}.hint{font-size:22px!important;opacity:.36!important}
-.bar{height:3px;background:rgba(255,255,255,.10);position:absolute;left:40px;right:40px;bottom:47px;border-radius:3px;overflow:hidden}.fill{height:100%;background:linear-gradient(90deg,rgba(255,255,255,.72),#fff);width:0%;border-radius:3px;transition:width .28s linear;box-shadow:0 0 8px rgba(255,255,255,.22)}
-footer{height:9%;min-height:58px;padding:0 40px;display:flex;align-items:center;justify-content:space-between;color:rgba(255,255,255,.34);font-size:14px;letter-spacing:.2px}
-@media (max-height:650px){header{min-height:82px;padding-top:14px}.title{font-size:30px}.line{height:42px}.line.active{height:58px;font-size:48px}#lyricsGroup{gap:8px}.bar{bottom:39px}footer{min-height:50px}}
+.track{min-width:0;max-width:75%}.title{font-size:34px;line-height:1.15;font-weight:760;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 14px rgba(0,0,0,.38)}.artist{font-size:19px;color:rgba(255,255,255,.65);margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status{font-size:14px;color:rgba(255,255,255,.50);text-align:right;white-space:nowrap}
+#lyrics{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 5.3%;overflow:hidden}
+#lyricsGroup{width:100%;display:flex;flex-direction:column;justify-content:center;gap:11px;transform:translate3d(0,0,0)}
+#lyricsGroup.step{animation:lyricsStep .34s cubic-bezier(.18,.72,.25,1)}
+@keyframes lyricsStep{0%{transform:translate3d(0,14px,0);opacity:.64}100%{transform:translate3d(0,0,0);opacity:1}}
+.line{height:50px;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 12px;font-size:32px;line-height:1.17;font-weight:520;color:rgba(255,255,255,.44);text-shadow:0 1px 10px rgba(0,0,0,.24);transform:translate3d(0,0,0);transition:opacity .30s ease,transform .30s ease,color .30s ease}
+.line .txt{max-width:100%;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;overflow-wrap:anywhere}
+.line.long{height:72px}.line.long .txt{max-width:94%}
+.line.m2{font-size:31px;opacity:.50;transform:scale(.97)}
+.line.m1{font-size:39px;opacity:.78;color:rgba(255,255,255,.78);transform:scale(.99)}
+.line.active{height:72px;font-size:57px;font-weight:790;opacity:1;color:#fff;letter-spacing:.1px;text-shadow:0 2px 18px rgba(0,0,0,.45),0 0 24px rgba(105,150,255,.15);animation:activeIn .34s cubic-bezier(.18,.72,.25,1)}
+.line.active.long{height:116px;font-size:47px;line-height:1.18}
+.line.active.long .txt{max-width:92%}
+.line.p1{font-size:41px;opacity:.82;color:rgba(255,255,255,.82);transform:scale(.995)}
+.line.p2{font-size:35px;opacity:.58;color:rgba(255,255,255,.62);transform:scale(.98)}
+.line.p3{font-size:31px;opacity:.38;transform:scale(.965)}
+@keyframes activeIn{0%{transform:scale(.978);opacity:.58;text-shadow:0 0 4px rgba(255,255,255,0)}55%{transform:scale(1.012);opacity:1}100%{transform:scale(1);opacity:1}}
+.line.active:after{content:"";position:absolute;width:38%;height:1px;margin-top:82px;background:linear-gradient(90deg,transparent,rgba(117,161,255,.26),rgba(199,128,255,.22),transparent);opacity:.65;pointer-events:none}
+.line.active.long:after{margin-top:126px}
+.empty{font-size:38px!important;opacity:.94!important;color:#fff!important}.hint{font-size:22px!important;opacity:.52!important}
+.bar{height:4px;background:rgba(255,255,255,.12);position:absolute;left:40px;right:40px;bottom:47px;border-radius:4px;overflow:visible}.fill{position:relative;height:100%;background:linear-gradient(90deg,rgba(92,145,255,.72),rgba(176,121,255,.82),#fff);width:0%;border-radius:4px;transition:width .28s linear;box-shadow:0 0 10px rgba(118,157,255,.24)}.fill:after{content:"";position:absolute;right:-4px;top:-2px;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 10px rgba(165,183,255,.68)}
+footer{height:9%;min-height:58px;padding:0 40px;display:flex;align-items:center;justify-content:space-between;color:rgba(255,255,255,.42);font-size:14px;letter-spacing:.2px}
+@media (max-height:650px){header{min-height:82px;padding-top:14px}.title{font-size:30px}.line{height:42px}.line.long{height:60px}.line.active{height:60px;font-size:49px}.line.active.long{height:94px;font-size:42px}#lyricsGroup{gap:7px}.bar{bottom:39px}footer{min-height:50px}.line.active:after{margin-top:68px}.line.active.long:after{margin-top:102px}}
 </style>
 </head>
 <body>
+<div id="particles"><i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i><i class="p"></i></div>
 <div id="app">
 <header><div class="track"><div id="title" class="title">等待手机播放器</div><div id="artist" class="artist">Tesla Lyrics</div></div><div id="status" class="status">正在连接…</div></header>
-<div id="lyrics"><div id="lyricsGroup"><div class="line m2">&nbsp;</div><div class="line m1">&nbsp;</div><div class="line active">等待播放</div><div class="line p1">&nbsp;</div><div class="line p2">&nbsp;</div><div class="line p3">&nbsp;</div></div></div>
+<div id="lyrics"><div id="lyricsGroup"><div class="line m2"><span class="txt">&nbsp;</span></div><div class="line m1"><span class="txt">&nbsp;</span></div><div class="line active"><span class="txt">等待播放</span></div><div class="line p1"><span class="txt">&nbsp;</span></div><div class="line p2"><span class="txt">&nbsp;</span></div><div class="line p3"><span class="txt">&nbsp;</span></div></div></div>
 <div class="bar"><div id="fill" class="fill"></div></div>
 <footer><span id="time">0:00 / 0:00</span><span>TESLA LYRICS</span></footer>
 </div>
@@ -43,6 +59,7 @@ footer{height:9%;min-height:58px;padding:0 40px;display:flex;align-items:center;
 (function(){
 'use strict';
 var TOPIC='tlx-b3598dd35e2ab18ef1e2dc84';
+var BASE_LYRIC_DELAY_MS=500;
 var state=null,lines=[],lastTrack='',lastEnvelopeTime=0,lyricsSource='',authoritativeKey='',lastRenderedIdx=-999,lastRenderedToken='';
 var titleEl=document.getElementById('title'),artistEl=document.getElementById('artist'),statusEl=document.getElementById('status'),groupEl=document.getElementById('lyricsGroup'),fillEl=document.getElementById('fill'),timeEl=document.getElementById('time');
 var toSimple=function(s){return String(s||'')};
@@ -50,25 +67,31 @@ try{if(window.OpenCC&&OpenCC.Converter){try{toSimple=OpenCC.Converter({from:'t',
 function simp(s){try{return toSimple(String(s||''))}catch(e){return String(s||'')}}
 function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function fmt(ms){ms=Math.max(0,Math.floor(ms/1000));return Math.floor(ms/60)+':'+String(ms%60).padStart(2,'0')}
-function position(){if(!state)return 0;var p=Number(state.elapsed)||0;if(state.playing&&lastEnvelopeTime)p+=Math.max(0,Date.now()-lastEnvelopeTime*1000);var d=Number(state.duration)||0;if(d>0)p=Math.min(p,d);return Math.max(0,p+(Number(state.offset)||0))}
+function mediaPosition(){if(!state)return 0;var p=Number(state.elapsed)||0;if(state.playing&&lastEnvelopeTime)p+=Math.max(0,Date.now()-lastEnvelopeTime*1000);var d=Number(state.duration)||0;if(d>0)p=Math.min(p,d);return Math.max(0,p)}
+function lyricPosition(){return Math.max(0,mediaPosition()+(Number(state&&state.offset)||0)-BASE_LYRIC_DELAY_MS)}
 function parseLrc(s){var out=[];String(s||'').split(/\r?\n/).forEach(function(row){var m=row.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s?(.*)$/);if(m){var text=(m[3]||' ').replace(/<\d+:\d+(?:\.\d+)?>/g,'').trim();out.push({t:(parseInt(m[1],10)*60+parseFloat(m[2]))*1000,text:simp(text||' ')})}});out.sort(function(a,b){return a.t-b.t});return out}
 function statusText(){if(!state)return '正在连接…';return (state.playing?'播放中':'已暂停')+(lyricsSource?' · '+lyricsSource:'')}
-function setMessage(main,sub){lastRenderedIdx=-999;lastRenderedToken=main+'|'+sub;groupEl.innerHTML='<div class="line m2">&nbsp;</div><div class="line m1">&nbsp;</div><div class="line active empty">'+esc(main)+'</div><div class="line p1 hint">'+esc(sub||'')+'</div><div class="line p2">&nbsp;</div><div class="line p3">&nbsp;</div>';pulseGroup()}
+function wrap(text){var t=String(text||' ');var long=t.replace(/\s+/g,'').length>23;return {text:t,long:long}}
+function lineHtml(cls,text){var w=wrap(text);return '<div class="line '+cls+(w.long?' long':'')+'"><span class="txt">'+esc(w.text||' ')+'</span></div>'}
+function setMessage(main,sub){lastRenderedIdx=-999;lastRenderedToken=main+'|'+sub;groupEl.innerHTML=lineHtml('m2',' ')+lineHtml('m1',' ')+lineHtml('active empty',main)+lineHtml('p1 hint',sub||'')+lineHtml('p2',' ')+lineHtml('p3',' ');pulseGroup()}
 function pulseGroup(){groupEl.classList.remove('step');void groupEl.offsetWidth;groupEl.classList.add('step')}
 function lyricIndex(p){if(!lines.length)return -1;var idx=0;for(var i=0;i<lines.length;i++){if(lines[i].t<=p)idx=i;else break}return idx}
-function updateLyrics(p,force){if(!lines.length)return;var idx=lyricIndex(p),token=lastTrack+'|'+lyricsSource+'|'+lines.length;if(!force&&idx===lastRenderedIdx&&token===lastRenderedToken)return;lastRenderedIdx=idx;lastRenderedToken=token;var rel=[-2,-1,0,1,2,3],cls=['m2','m1','active','p1','p2','p3'],html='';for(var k=0;k<6;k++){var j=idx+rel[k],text=(j>=0&&j<lines.length)?lines[j].text:' ';html+='<div class="line '+cls[k]+'">'+esc(text||' ')+'</div>'}groupEl.innerHTML=html;pulseGroup()}
-function render(force){var p=position(),d=state?Number(state.duration)||0:0;var rawP=Math.max(0,p-(Number(state&&state.offset)||0));timeEl.textContent=fmt(rawP)+' / '+fmt(d);fillEl.style.width=d>0?Math.min(100,Math.max(0,rawP/d*100))+'%':'0%';statusEl.textContent=statusText();updateLyrics(p,!!force)}
+function updateLyrics(p,force){if(!lines.length)return;var idx=lyricIndex(p),token=lastTrack+'|'+lyricsSource+'|'+lines.length;if(!force&&idx===lastRenderedIdx&&token===lastRenderedToken)return;lastRenderedIdx=idx;lastRenderedToken=token;var rel=[-2,-1,0,1,2,3],cls=['m2','m1','active','p1','p2','p3'],html='';for(var k=0;k<6;k++){var j=idx+rel[k],text=(j>=0&&j<lines.length)?lines[j].text:' ';html+=lineHtml(cls[k],text)}groupEl.innerHTML=html;pulseGroup()}
+function render(force){var mp=mediaPosition(),lp=lyricPosition(),d=state?Number(state.duration)||0:0;timeEl.textContent=fmt(mp)+' / '+fmt(d);fillEl.style.width=d>0?Math.min(100,Math.max(0,mp/d*100))+'%':'0%';statusEl.textContent=statusText();updateLyrics(lp,!!force)}
 function compact(s){return String(s||'').toLowerCase().replace(/[\s\-—_·•.,，。!！?？:：'"“”‘’/\\]/g,'')}
 function cleanTitle(s){var x=String(s||'').trim();x=x.replace(/\s*[（(【\[][^）)】\]]*[）)】\]]\s*$/g,'').trim();x=x.replace(/\s*[-–—]\s*(live|remix|cover|伴奏|纯音乐|现场版|完整版|dj版|mix).*$/i,'').trim();return x||String(s||'').trim()}
 function artistParts(s){var raw=String(s||'').trim();var a=raw.split(/\s*(?:\/|、|,|，|&|×|x|;|；| feat\.? | ft\.? | featuring )\s*/i).filter(function(v){return !!v});return a.length?a:[raw]}
 function scoreItem(x,s,ct,pa){if(!x||!x.syncedLyrics)return -99999;var sc=0,tn=compact(x.trackName||x.name),want=compact(ct),orig=compact(s.title),ar=compact(x.artistName),pp=compact(pa);if(tn===want)sc+=130;else if(tn===orig)sc+=120;else if(tn.indexOf(want)>=0||want.indexOf(tn)>=0)sc+=70;if(pp&&ar.indexOf(pp)>=0)sc+=80;var d=Number(x.duration)||0,w=Number(s.duration||0)/1000;if(d&&w){var diff=Math.abs(d-w);if(diff<=2.5)sc+=90;else if(diff<=5)sc+=60;else if(diff<=10)sc+=25;else if(diff>25)sc-=80}if(x.albumName&&s.album&&compact(x.albumName)===compact(s.album))sc+=30;return sc}
-async function fetchJson(url){var r=await fetch(url,{headers:{'Lrclib-Client':'TeslaLyrics/4.0 (https://hanz316.github.io/lyrics/)'}});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}
+async function fetchJson(url){var r=await fetch(url,{headers:{'Lrclib-Client':'TeslaLyrics/5.0 (https://hanz316.github.io/lyrics/)'}});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}
 async function tryExact(base,s,title,artist,withAlbum){var q='track_name='+encodeURIComponent(title)+'&artist_name='+encodeURIComponent(artist);if(withAlbum&&s.album)q+='&album_name='+encodeURIComponent(s.album);if(Number(s.duration)>0)q+='&duration='+Math.round(Number(s.duration)/1000);try{var x=await fetchJson(base+'/api/get?'+q);var l=parseLrc(x&&x.syncedLyrics);if(l.length)return {lines:l,source:base.indexOf('karalyr')>=0?'Karalyr':'LRCLIB'}}catch(e){}return null}
 async function trySearch(s,ct,pa){var urls=['https://lrclib.net/api/search?track_name='+encodeURIComponent(ct)+'&artist_name='+encodeURIComponent(pa),'https://lrclib.net/api/search?q='+encodeURIComponent(ct+' '+pa),'https://lrclib.net/api/search?track_name='+encodeURIComponent(ct)];var best=null,bestScore=-99999;for(var i=0;i<urls.length;i++){try{var a=await fetchJson(urls[i]);if(Array.isArray(a)){for(var j=0;j<a.length;j++){var sc=scoreItem(a[j],s,ct,pa);if(sc>bestScore){bestScore=sc;best=a[j]}}if(bestScore>=170)break}}catch(e){}}if(best&&best.syncedLyrics){var l=parseLrc(best.syncedLyrics);if(l.length)return {lines:l,source:'LRCLIB'}}return null}
 async function loadLyrics(s,key){lines=[];lyricsSource='';setMessage('正在匹配歌词…','网易云 / QQ / 酷狗 / LRCLIB');var ct=cleanTitle(s.title),aps=artistParts(s.artist),pa=aps[0]||s.artist||'',r=null;r=await tryExact('https://lrclib.net',s,s.title||'',s.artist||'',true);if(!r&&(ct!==s.title||pa!==s.artist))r=await tryExact('https://lrclib.net',s,ct,pa,false);if(!r)r=await trySearch(s,ct,pa);if(!r)r=await tryExact('https://karalyr.com',s,ct,pa,false);if(lastTrack!==key||authoritativeKey===key)return;if(r){lines=r.lines;lyricsSource=r.source;render(true);return}setMessage('正在等待多源歌词…','网易云 / QQ / 酷狗 / LrcAPI')}
 async function acceptLyricsAttachment(env){try{if(!env.attachment||!env.attachment.url)return;var r=await fetch(env.attachment.url,{cache:'no-store'});if(!r.ok)return;var x=await r.json();if(!x||x.kind!=='lyrics'||!state||x.key!==lastTrack)return;var parsed=parseLrc(x.lrc||'');if(parsed.length<4)return;authoritativeKey=x.key;lines=parsed;lyricsSource=x.provider||'多源匹配';render(true)}catch(e){}}
 function acceptEnvelope(env){if(!env||env.event!=='message')return;if(env.attachment&&env.attachment.url){acceptLyricsAttachment(env);return}var s;try{s=JSON.parse(env.message)}catch(e){return}if(s.kind&&s.kind!=='state')return;lastEnvelopeTime=Number(env.time)||Math.floor(Date.now()/1000);state=s;titleEl.textContent=simp(s.title||'未知歌曲');artistEl.textContent=simp((s.artist||'')+(s.source?' · '+s.source:''));var key=[s.title,s.artist,s.album,s.duration].join('|');if(key!==lastTrack){lastTrack=key;authoritativeKey='';loadLyrics(s,key)}else render(false)}
-var es=new EventSource('https://ntfy.sh/'+TOPIC+'/sse?since=12h');es.onopen=function(){if(!state)statusEl.textContent='已连接 · 等待播放器'};es.onmessage=function(e){try{acceptEnvelope(JSON.parse(e.data))}catch(_){}};es.onerror=function(){statusEl.textContent='连接中…'};
+var es=new EventSource('https://ntfy.sh/'+TOPIC+'/sse?since=12h');
+es.onopen=function(){if(!state)statusEl.textContent='已连接 · 等待播放器'};
+es.onmessage=function(e){try{acceptEnvelope(JSON.parse(e.data))}catch(_){}};
+es.onerror=function(){statusEl.textContent='连接中…'};
 setInterval(function(){render(false)},300);
 })();
 </script>
