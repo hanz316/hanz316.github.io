@@ -79,7 +79,32 @@ function seekFromClientX(x,commit){if(!state||!Number(state.duration))return;var
 var dragging=false;progressEl.addEventListener('mousedown',function(e){dragging=true;seekFromClientX(e.clientX,false)});window.addEventListener('mousemove',function(e){if(dragging)seekFromClientX(e.clientX,false)});window.addEventListener('mouseup',function(e){if(dragging){dragging=false;seekFromClientX(e.clientX,true)}});progressEl.addEventListener('touchstart',function(e){dragging=true;seekFromClientX(e.touches[0].clientX,false);e.preventDefault()},{passive:false});progressEl.addEventListener('touchmove',function(e){if(dragging)seekFromClientX(e.touches[0].clientX,false);e.preventDefault()},{passive:false});progressEl.addEventListener('touchend',function(e){if(dragging){dragging=false;var x=e.changedTouches&&e.changedTouches[0]?e.changedTouches[0].clientX:progressEl.getBoundingClientRect().left;seekFromClientX(x,true)}e.preventDefault()},{passive:false});progressEl.addEventListener('click',function(e){if(!dragging)seekFromClientX(e.clientX,true)});
 function acceptEnvelope(env){if(!env||env.event!=='message')return;if(env.attachment&&env.attachment.url){acceptLyricsAttachment(env);return}var s;try{s=JSON.parse(env.message)}catch(e){return}if(s.kind&&s.kind!=='state')return;lastEnvelopeTime=Number(env.time)||Math.floor(Date.now()/1000);state=s;titleEl.textContent=simp(s.title||'未知歌曲');artistEl.textContent=simp((s.artist||'')+(s.source?' · '+s.source:''));var key=[s.title,s.artist,s.album,s.duration].join('|');if(key!==lastTrack){lastTrack=key;authoritativeKey='';setCover(s);loadLyrics(s,key)}else render(false)}
 refreshDelayUi();
-var es=new EventSource('https://ntfy.sh/'+TOPIC+'/sse?since=12h');es.onopen=function(){if(!state)statusEl.textContent='已连接 · 等待播放器'};es.onmessage=function(e){try{acceptEnvelope(JSON.parse(e.data))}catch(_){}};es.onerror=function(){statusEl.textContent='连接中…'};setInterval(function(){render(false)},300);
+var es=null;
+async function startStateStream(){
+  var since='latest';
+  try{
+    var r=await fetch('https://ntfy.sh/'+TOPIC+'/json?poll=1&since=12h&tags=notes',{cache:'no-store'});
+    if(r.ok){
+      var txt=await r.text(),rows=txt.trim()?txt.trim().split(/\n+/):[],latest=null;
+      for(var i=0;i<rows.length;i++){
+        try{
+          var env=JSON.parse(rows[i]);
+          if(env&&env.event==='message'){
+            var s=JSON.parse(env.message||'{}');
+            if(!s.kind||s.kind==='state')latest=env;
+          }
+        }catch(e){}
+      }
+      if(latest){acceptEnvelope(latest);since=latest.id||String(latest.time||'latest');}
+    }
+  }catch(e){}
+  es=new EventSource('https://ntfy.sh/'+TOPIC+'/sse?since='+encodeURIComponent(since));
+  es.onopen=function(){if(!state)statusEl.textContent='已连接 · 等待播放器'};
+  es.onmessage=function(e){try{acceptEnvelope(JSON.parse(e.data))}catch(_){}};
+  es.onerror=function(){statusEl.textContent='连接中…'};
+}
+startStateStream();
+setInterval(function(){render(false)},300);
 })();
 </script>
 </body>
