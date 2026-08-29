@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Tesla WebRTC Probe</title>
+<style>
+html,body{margin:0;background:#0d0d0f;color:#f4f4f5;font-family:Arial,"Noto Sans SC",sans-serif}main{max-width:900px;margin:auto;padding:34px}h1{font-size:34px;margin:0 0 24px}.card{background:#19191d;border-radius:14px;padding:22px;margin:14px 0}.row{font-size:21px;line-height:1.65}.ok{color:#72f59a}.bad{color:#ff8585}.wait{color:#ffd56a}pre{white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.45;opacity:.8}button{font-size:19px;padding:13px 20px;border:0;border-radius:10px;margin-top:14px}</style>
+</head>
+<body><main>
+<h1>TESLA WEBRTC PROBE</h1>
+<div class="card">
+<div class="row">RTCPeerConnection：<b id="api" class="wait">检测中</b></div>
+<div class="row">DataChannel：<b id="dc" class="wait">等待</b></div>
+<div class="row">ICE：<b id="ice" class="wait">等待</b></div>
+<div class="row">最终结果：<b id="result" class="wait">测试中</b></div>
+<button onclick="location.reload()">重新测试</button>
+</div>
+<div class="card"><pre id="log"></pre></div>
+</main>
+<script>
+(function(){
+ var api=document.getElementById('api'),dcEl=document.getElementById('dc'),iceEl=document.getElementById('ice'),result=document.getElementById('result'),logEl=document.getElementById('log');
+ function log(s){logEl.textContent+=s+'\n';}
+ function set(el,text,cls){el.textContent=text;el.className=cls;}
+ if(!window.RTCPeerConnection){set(api,'不支持','bad');set(result,'失败：没有 RTCPeerConnection','bad');log('RTCPeerConnection is undefined');return;}
+ set(api,'支持','ok');log('RTCPeerConnection available');
+ var cfg={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+ var a,b,ch,remoteCh,done=false,timer;
+ try{a=new RTCPeerConnection(cfg);b=new RTCPeerConnection(cfg);}catch(e){set(result,'失败：创建 PeerConnection 异常','bad');log(String(e));return;}
+ function candType(c){var s=(c&&c.candidate)||'';var m=s.match(/ typ ([a-z]+)/);return m?m[1]:'unknown';}
+ a.onicecandidate=function(e){if(e.candidate){log('A ICE '+candType(e.candidate));b.addIceCandidate(e.candidate).catch(function(x){log('B addIce '+x);});}};
+ b.onicecandidate=function(e){if(e.candidate){log('B ICE '+candType(e.candidate));a.addIceCandidate(e.candidate).catch(function(x){log('A addIce '+x);});}};
+ a.oniceconnectionstatechange=function(){set(iceEl,a.iceConnectionState,(a.iceConnectionState==='connected'||a.iceConnectionState==='completed')?'ok':(a.iceConnectionState==='failed'?'bad':'wait'));log('A ICE state '+a.iceConnectionState);};
+ b.oniceconnectionstatechange=function(){log('B ICE state '+b.iceConnectionState);};
+ b.ondatachannel=function(e){remoteCh=e.channel;remoteCh.onopen=function(){log('B channel open');};remoteCh.onmessage=function(e){log('B recv '+e.data);if(e.data==='TESLA_PING')remoteCh.send('TESLA_PONG');};};
+ try{ch=a.createDataChannel('teslalyrics',{ordered:true});}catch(e){set(dcEl,'创建失败','bad');set(result,'失败：DataChannel 不可用','bad');log(String(e));return;}
+ ch.onopen=function(){set(dcEl,'已连接','ok');log('A channel open');try{ch.send('TESLA_PING');}catch(e){log(String(e));}};
+ ch.onmessage=function(e){log('A recv '+e.data);if(e.data==='TESLA_PONG'&&!done){done=true;clearTimeout(timer);set(dcEl,'成功收发','ok');set(result,'通过：WebRTC DataChannel 可用','ok');}};
+ ch.onerror=function(){log('DataChannel error');};
+ a.createOffer().then(function(o){return a.setLocalDescription(o).then(function(){return b.setRemoteDescription(o);});}).then(function(){return b.createAnswer();}).then(function(ans){return b.setLocalDescription(ans).then(function(){return a.setRemoteDescription(ans);});}).catch(function(e){set(result,'失败：SDP/ICE 异常','bad');log(String(e));});
+ timer=setTimeout(function(){if(!done){set(result,'未通过：15 秒内 DataChannel 未完成收发','bad');log('TIMEOUT');}},15000);
+})();
+</script></body></html>
