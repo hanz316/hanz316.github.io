@@ -1,0 +1,57 @@
+name: Apply dual MQTT relay
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-dual-mqtt.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch Tesla relay pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          needle = '<script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>'
+          extra = '<script src="/rtcapp/dual-mqtt.js?v=2"></script>'
+
+          for name in ('rtcapp/car.html', 'rtcapp/phone.html'):
+              p = Path(name)
+              s = p.read_text(encoding='utf-8')
+              if extra in s:
+                  print(name, 'already patched')
+                  continue
+              if needle not in s:
+                  raise SystemExit(f'MQTT script marker missing in {name}')
+              s = s.replace(needle, needle + '\n' + extra, 1)
+              if name.endswith('car.html'):
+                  s = s.replace("if(!connected)return '正在连接…';", "if(!connected)return client&&client.tlxSummary?client.tlxSummary():'主/备线路连接中…';", 1)
+                  s = s.replace("+(lyricsSource?' · '+lyricsSource:'')+' · WSS'}", "+(lyricsSource?' · '+lyricsSource:'')+' · '+(client&&client.tlxSummary?client.tlxSummary():'WSS')}", 1)
+              p.write_text(s, encoding='utf-8')
+              print(name, 'patched')
+          PY
+          grep -q 'dual-mqtt.js' rtcapp/car.html
+          grep -q 'dual-mqtt.js' rtcapp/phone.html
+      - name: Commit relay failover update
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add rtcapp/car.html rtcapp/phone.html
+          if git diff --cached --quiet; then
+            echo 'Dual relay already applied.'
+            exit 0
+          fi
+          git commit -m 'Enable primary and backup MQTT relays'
+          git push
