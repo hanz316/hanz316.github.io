@@ -22,26 +22,29 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          needle = '<script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>'
-          extra = '<script src="/rtcapp/dual-mqtt.js?v=2"></script>'
-
-          for name in ('rtcapp/car.html', 'rtcapp/phone.html'):
-              p = Path(name)
-              s = p.read_text(encoding='utf-8')
-              if extra in s:
-                  print(name, 'already patched')
-                  continue
-              if needle not in s:
-                  raise SystemExit(f'MQTT script marker missing in {name}')
-              s = s.replace(needle, needle + '\n' + extra, 1)
+          for name in ('rtcapp/car.html','rtcapp/phone.html'):
+              p=Path(name)
+              s=p.read_text(encoding='utf-8')
+              s=s.replace('<script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>',
+                          '<script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js" onerror="this.onerror=null;this.src=\'https://cdn.jsdelivr.net/npm/mqtt@4.3.7/dist/mqtt.min.js\'"></script>',1)
+              s=s.replace('<script src="/rtcapp/dual-mqtt.js?v=2"></script>','<script src="dual-mqtt.js?v=4"></script>',1)
+              s=s.replace('<script src="/rtcapp/dual-mqtt.js?v=3"></script>','<script src="dual-mqtt.js?v=4"></script>',1)
               if name.endswith('car.html'):
-                  s = s.replace("if(!connected)return '正在连接…';", "if(!connected)return client&&client.tlxSummary?client.tlxSummary():'主/备线路连接中…';", 1)
-                  s = s.replace("+(lyricsSource?' · '+lyricsSource:'')+' · WSS'}", "+(lyricsSource?' · '+lyricsSource:'')+' · '+(client&&client.tlxSummary?client.tlxSummary():'WSS')}", 1)
-              p.write_text(s, encoding='utf-8')
-              print(name, 'patched')
+                  old="var client=null,connected=false,state=null,pendingLyrics=null,lines=[],lyricsSource='',lastTrackKey='',lastRendered=-999,lastToken='',stateAnchor=0,lastStateAt=0,dragMs=null,lyricTimer=null,lyricsWaitTimer=null,coverTimer=null,lastCoverKey='',flip=false,LYRIC_DELAY_MS=1000;"
+                  new="var client=null,connected=false,state=null,pendingLyrics=null,lines=[],lyricsSource='',lastTrackKey='',lastRendered=-999,lastToken='',stateAnchor=0,lastStateAt=0,lastStateSentAt=0,lastLyricsSentAt=0,dragMs=null,lyricTimer=null,lyricsWaitTimer=null,coverTimer=null,lastCoverKey='',flip=false,LYRIC_DELAY_MS=1000;"
+                  if old in s: s=s.replace(old,new,1)
+                  old="function acceptState(s){if(!s||s.kind!=='state')return;state=s;"
+                  new="function acceptState(s){if(!s||s.kind!=='state')return;var stamp=Number(s.sentAtMs)||0;if(stamp&&lastStateSentAt&&stamp<lastStateSentAt-1000)return;if(stamp)lastStateSentAt=Math.max(lastStateSentAt,stamp);state=s;"
+                  if old in s: s=s.replace(old,new,1)
+                  old="function acceptLyrics(x){if(!x||x.kind!=='lyrics')return;pendingLyrics=x;applyPendingLyrics()}"
+                  new="function acceptLyrics(x){if(!x||x.kind!=='lyrics')return;var stamp=Number(x.sentAtMs)||0;if(stamp&&lastLyricsSentAt&&stamp<lastLyricsSentAt-1000)return;if(stamp)lastLyricsSentAt=Math.max(lastLyricsSentAt,stamp);pendingLyrics=x;applyPendingLyrics()}"
+                  if old in s: s=s.replace(old,new,1)
+              p.write_text(s,encoding='utf-8')
+              print(name,'patched')
           PY
-          grep -q 'dual-mqtt.js' rtcapp/car.html
-          grep -q 'dual-mqtt.js' rtcapp/phone.html
+          grep -q 'dual-mqtt.js?v=4' rtcapp/car.html
+          grep -q 'dual-mqtt.js?v=4' rtcapp/phone.html
+          grep -q 'lastStateSentAt' rtcapp/car.html
       - name: Commit relay failover update
         shell: bash
         run: |
@@ -50,8 +53,8 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add rtcapp/car.html rtcapp/phone.html
           if git diff --cached --quiet; then
-            echo 'Dual relay already applied.'
+            echo 'Relay pages already current.'
             exit 0
           fi
-          git commit -m 'Enable primary and backup MQTT relays'
+          git commit -m 'Harden dual relay and add portable backup page'
           git push
