@@ -1,0 +1,5 @@
+/* v12 Tesla Chromium compatibility fixes */
+.line,.line.active,.line .txt,.line.active .txt{ text-shadow:none!important; }
+.line.active .txt{ color:#fff!important; background-image:none!important; -webkit-background-clip:initial!important; background-clip:initial!important; }
+.line.m2,.line.m1,.line.p1,.line.p2,.line.p3{ text-shadow:none!important; }
+#lyrics:before{ background:linear-gradient(135deg,rgba(11,15,25,.13),rgba(5,8,14,.04))!important; border-color:rgba(255,255,255,.025)!important; }
