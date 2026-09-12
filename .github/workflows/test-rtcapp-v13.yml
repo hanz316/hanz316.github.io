@@ -1,11 +1,12 @@
-name: Test TeslaLyrics v14 UI
+name: Test TeslaLyrics v15 UI
 on:
   push:
     paths:
       - 'rtcapp/car.html'
       - 'rtcapp/premium-v13.js'
       - 'rtcapp/premium-v13.css'
-      - 'rtcapp/premium-v14-tune.css'
+      - 'rtcapp/premium-v15-tune.css'
+      - 'rtcapp/premium-v15-controls.js'
       - 'rtcapp/https-relay.js'
       - '.github/workflows/test-rtcapp-v13.yml'
   workflow_dispatch:
@@ -18,25 +19,28 @@ jobs:
         with:
           node-version: '20'
       - name: JavaScript syntax
-        run: node --check rtcapp/premium-v13.js && node --check rtcapp/https-relay.js
+        run: node --check rtcapp/premium-v13.js && node --check rtcapp/premium-v15-controls.js && node --check rtcapp/https-relay.js
       - name: Static Atom safety checks
         run: |
           python - <<'PY'
           from pathlib import Path
           js=Path('rtcapp/premium-v13.js').read_text()
+          controls=Path('rtcapp/premium-v15-controls.js').read_text()
           css=Path('rtcapp/premium-v13.css').read_text()
-          tune=Path('rtcapp/premium-v14-tune.css').read_text()
+          tune=Path('rtcapp/premium-v15-tune.css').read_text()
           loader=Path('rtcapp/car.html').read_text()
-          assert 'premium-v13.js?v=14' in loader
-          assert 'premium-v13.css?v=14' in loader
-          assert 'premium-v14-tune.css?v=14' in loader
-          assert 'https-relay.js?v=14' in loader
+          assert 'premium-v13.js?v=15' in loader
+          assert 'premium-v13.css?v=15' in loader
+          assert 'premium-v15-tune.css?v=15' in loader
+          assert 'premium-v15-controls.js?v=15' in loader
+          assert 'https-relay.js?v=15' in loader
           assert 'for(var i=0;i<36;i++)' in js
           assert 'WebGL' not in js and 'AudioContext' not in js
           assert 'backdrop-filter' not in css and 'backdrop-filter' not in tune
           assert 'return112' not in js
           assert css.count('{') == css.count('}')
           assert tune.count('{') == tune.count('}')
+          assert '译文 ' in controls and '罗马音 ' in controls
           print('static checks passed')
           PY
       - name: Install DOM test dependency
@@ -50,7 +54,7 @@ jobs:
           <div id="coverBg"></div><div id="aurora"></div><div id="shade"></div>
           <div id="app"><header><div class="track"><div id="title" class="title">等待</div><div id="artist" class="artist">Tesla Lyrics</div></div><div id="status"></div></header>
           <div id="lyrics"><div id="lyricsGroup"><div class="line m2"><span class="txt"></span></div><div class="line m1"><span class="txt"></span></div><div class="line active"><span class="txt">hello</span></div><div class="line p1"><span class="txt"></span></div><div class="line p2"><span class="txt"></span></div><div class="line p3"><span class="txt"></span></div></div></div>
-          <div id="controlDock"><button id="dockClose"></button><div id="delayValue">延迟 1.0s</div></div><button id="dockOpen"></button><div id="progressWrap"><div class="bar"></div></div><footer></footer></div>
+          <div id="controlDock"><button id="dockClose"></button><div class="delayRow"></div><div id="delayValue">延迟 1.0s</div><div class="dockBottom"></div></div><button id="dockOpen"></button><div id="progressWrap"><div class="bar"></div></div><footer></footer></div>
           </body></html>`;
           const dom=new JSDOM(html,{runScripts:'outside-only',pretendToBeVisual:true,url:'https://example.com'});
           const w=dom.window;
@@ -63,10 +67,13 @@ jobs:
           w.tlxAcceptState=(x)=>{};
           w.tlxAcceptLyrics=(x)=>{forwarded=x};
           w.eval(fs.readFileSync('rtcapp/premium-v13.js','utf8'));
+          w.eval(fs.readFileSync('rtcapp/premium-v15-controls.js','utf8'));
           w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
           if(!w.document.getElementById('premiumNowCard')) throw new Error('cover card missing');
           if(w.document.querySelectorAll('.premiumWaveBar').length!==36) throw new Error('waveform bar count');
           if(!w.document.getElementById('premiumStatus')) throw new Error('status indicator missing');
+          if(!w.document.getElementById('premiumToggleTranslation')) throw new Error('translation toggle missing');
+          if(!w.document.getElementById('premiumToggleRomaji')) throw new Error('romaji toggle missing');
           w.tlxAcceptState({kind:'state',title:'Test Song',artist:'Singer',album:'Album',duration:180000,elapsed:20000,playing:true});
           w.tlxAcceptLyrics({kind:'lyrics',key:'x',lrc:'[00:10.000]Hello world\n[00:10.000]你好世界\n[00:20.000]Second line\n[00:20.000]第二句\n[00:30.000]Third line\n[00:40.000]Fourth line'});
           if(!forwarded || (forwarded.lrc.match(/00:10/g)||[]).length!==1) throw new Error('duplicate timestamp not normalized');
