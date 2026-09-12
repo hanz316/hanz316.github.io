@@ -1,8 +1,10 @@
 (function(){'use strict';
 if(!window.mqtt||!window.mqtt.connect||window.mqtt.__tlxDualPatched)return;
 var originalConnect=window.mqtt.connect;
-var PRIMARY='wss://broker.emqx.io:8084/mqtt';
-var BACKUP='wss://broker.hivemq.com:8884/mqtt';
+// HiveMQ has been the working route in-car; promote it to primary so the UI no longer
+// waits on the currently unreliable EMQX route before showing a usable connection.
+var PRIMARY='wss://broker.hivemq.com:8884/mqtt';
+var BACKUP='wss://broker.emqx.io:8084/mqtt';
 function cloneOptions(src,suffix){var out={},k;src=src||{};for(k in src)if(Object.prototype.hasOwnProperty.call(src,k))out[k]=src[k];out.clientId=(src.clientId||('tlx-'+Math.random().toString(16).slice(2)))+'-'+suffix;out.reconnectPeriod=src.reconnectPeriod==null?1500:src.reconnectPeriod;out.connectTimeout=Math.min(Number(src.connectTimeout)||10000,10000);return out;}
 function DualClient(options){this._handlers={};this._clients=[];this._subs=[];this._retained={};this._seen={};this._ended=false;this.connected=false;this.reconnecting=false;this._make(PRIMARY,'主线路','p',options||{});this._make(BACKUP,'备用线路','b',options||{});}
 DualClient.prototype._emit=function(name){var list=this._handlers[name]||[],args=Array.prototype.slice.call(arguments,1),i;list=list.slice();for(i=0;i<list.length;i++)try{list[i].apply(this,args)}catch(e){}};
@@ -17,6 +19,6 @@ DualClient.prototype._make=function(url,label,id,options){var self=this,entry={i
 DualClient.prototype.subscribe=function(topic,opts,cb){if(typeof opts==='function'){cb=opts;opts={};}opts=opts||{};this._subs.push({topic:topic,opts:opts});var i,c,called=false;for(i=0;i<this._clients.length;i++){c=this._clients[i].client;if(c&&c.connected)try{c.subscribe(topic,opts,function(err,granted){if(!called&&cb){called=true;cb(err,granted)}})}catch(e){}}if(cb&&!called)setTimeout(function(){cb(null,[])},0);return this;};
 DualClient.prototype.publish=function(topic,payload,opts,cb){if(typeof opts==='function'){cb=opts;opts={};}opts=opts||{};if(opts.retain)this._retained[topic]={payload:payload,opts:opts};var i,c,count=0,done=false;for(i=0;i<this._clients.length;i++){c=this._clients[i].client;if(c&&c.connected){count++;try{c.publish(topic,payload,opts,function(err){if(!done&&cb){done=true;cb(err||null)}})}catch(e){}}}if(!count&&cb)setTimeout(function(){cb(new Error('No MQTT relay connected'))},0);return this;};
 DualClient.prototype.end=function(force,opts,cb){if(typeof force==='function'){cb=force;force=false;opts={};}else if(typeof opts==='function'){cb=opts;opts={};}this._ended=true;this.connected=false;this.reconnecting=false;var i,c;for(i=0;i<this._clients.length;i++){c=this._clients[i].client;if(c)try{c.end(!!force,opts||{})}catch(e){}}if(cb)setTimeout(cb,0);return this;};
-window.mqtt.connect=function(url,options){if(url===PRIMARY||String(url||'').indexOf('broker.emqx.io')>=0)return new DualClient(options||{});return originalConnect.call(window.mqtt,url,options);};
+window.mqtt.connect=function(url,options){var u=String(url||'');if(url===PRIMARY||url===BACKUP||u.indexOf('broker.emqx.io')>=0||u.indexOf('broker.hivemq.com')>=0)return new DualClient(options||{});return originalConnect.call(window.mqtt,url,options);};
 window.mqtt.__tlxDualPatched=true;window.TeslaLyricsDualRelay={primary:PRIMARY,backup:BACKUP};
 })();
