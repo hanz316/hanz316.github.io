@@ -11,6 +11,7 @@ function stateTrack(s){return [s&&s.title||'',s&&s.artist||'',s&&s.album||'',Num
 function normalizeState(src){
   if(!src)return null;
   var now=Date.now(),stamp=Number(src.sentAtMs)||0,key=stateTrack(src),same=key===lastStateTrack;
+  if(stamp&&now-stamp>90000)return null;
   if(same&&stamp&&lastStateStamp&&stamp<=lastStateStamp)return null;
   var out=copyObject(src),elapsed=Math.max(0,Number(out.elapsed)||0),duration=Math.max(0,Number(out.duration)||0),playing=!!out.playing;
   if(playing&&stamp){var transit=now-stamp;if(transit>0&&transit<45000)elapsed+=transit;}
@@ -27,7 +28,7 @@ function normalizeState(src){
 function markState(){lastStateRxAt=Date.now();lastAnyRxAt=lastStateRxAt;window.tlxRelayLastStateAt=lastStateRxAt}
 function markAny(){lastAnyRxAt=Date.now()}
 function acceptEnvelope(env){
-  if(!env||Number(env.v)<10||Number(env.v)>16)return;
+  if(!env||Number(env.v)<10||Number(env.v)>17)return;
   if(env.kind==='state'&&env.payload&&window.tlxAcceptState){var s=normalizeState(env.payload);if(s){markState();window.tlxAcceptState(s)}return;}
   if(env.kind==='lyrics'&&env.payload&&window.tlxAcceptLyrics){markAny();window.tlxAcceptLyrics(env.payload);return;}
   if(env.kind==='lyricsChunk'){
@@ -78,6 +79,6 @@ window.tlxRelayForceRecover=function(){pollOnce();restartStreams()};
 window.tlxHttpCommand=function(action,extra){
   var x={kind:'control',action:action,ts:Date.now()},k;if(extra)for(k in extra)x[k]=extra[k];
   if(action==='seek'){allowBackwardUntil=Date.now()+3500;if(extra&&isFinite(Number(extra.position))){lastStateElapsed=Math.max(0,Number(extra.position));lastStateLocalAt=Date.now();}}
-  try{var r=new XMLHttpRequest();r.open('POST',ROOT+CMD,true);r.setRequestHeader('Content-Type','text/plain;charset=UTF-8');r.send(JSON.stringify({v:16,kind:'command',payload:x}))}catch(e){}
+  try{var r=new XMLHttpRequest();r.open('POST',ROOT+CMD,true);r.setRequestHeader('Content-Type','text/plain;charset=UTF-8');r.send(JSON.stringify({v:17,kind:'command',payload:x}))}catch(e){}
 };
 })();
