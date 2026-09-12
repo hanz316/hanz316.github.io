@@ -1,10 +1,11 @@
-name: Test TeslaLyrics v13 UI
+name: Test TeslaLyrics v14 UI
 on:
   push:
     paths:
       - 'rtcapp/car.html'
       - 'rtcapp/premium-v13.js'
       - 'rtcapp/premium-v13.css'
+      - 'rtcapp/premium-v14-tune.css'
       - 'rtcapp/https-relay.js'
       - '.github/workflows/test-rtcapp-v13.yml'
   workflow_dispatch:
@@ -24,15 +25,18 @@ jobs:
           from pathlib import Path
           js=Path('rtcapp/premium-v13.js').read_text()
           css=Path('rtcapp/premium-v13.css').read_text()
+          tune=Path('rtcapp/premium-v14-tune.css').read_text()
           loader=Path('rtcapp/car.html').read_text()
-          assert 'premium-v13.js?v=13' in loader
-          assert 'premium-v13.css?v=13' in loader
-          assert 'https-relay.js?v=13' in loader
+          assert 'premium-v13.js?v=14' in loader
+          assert 'premium-v13.css?v=14' in loader
+          assert 'premium-v14-tune.css?v=14' in loader
+          assert 'https-relay.js?v=14' in loader
           assert 'for(var i=0;i<36;i++)' in js
           assert 'WebGL' not in js and 'AudioContext' not in js
-          assert 'backdrop-filter' not in css
+          assert 'backdrop-filter' not in css and 'backdrop-filter' not in tune
           assert 'return112' not in js
           assert css.count('{') == css.count('}')
+          assert tune.count('{') == tune.count('}')
           print('static checks passed')
           PY
       - name: Install DOM test dependency
