@@ -92,4 +92,5 @@ jobs:
           const sub=w.document.getElementById('premiumSubline');
           if(!sub) throw new Error('bilingual subline missing');
           console.log('v16 DOM regression passed');
+          w.close();
           NODE
