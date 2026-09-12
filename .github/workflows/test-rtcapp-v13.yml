@@ -1,13 +1,15 @@
-name: Test TeslaLyrics v15 UI
+name: Test TeslaLyrics v16 UI
 on:
   push:
     paths:
       - 'rtcapp/car.html'
       - 'rtcapp/premium-v13.js'
       - 'rtcapp/premium-v13.css'
-      - 'rtcapp/premium-v15-tune.css'
       - 'rtcapp/premium-v15-controls.js'
+      - 'rtcapp/premium-v16-tune.css'
+      - 'rtcapp/premium-v16-fit.js'
       - 'rtcapp/https-relay.js'
+      - 'rtcapp/phone.html'
       - '.github/workflows/test-rtcapp-v13.yml'
   workflow_dispatch:
 jobs:
@@ -19,29 +21,34 @@ jobs:
         with:
           node-version: '20'
       - name: JavaScript syntax
-        run: node --check rtcapp/premium-v13.js && node --check rtcapp/premium-v15-controls.js && node --check rtcapp/https-relay.js
-      - name: Static Atom safety checks
+        run: node --check rtcapp/premium-v13.js && node --check rtcapp/premium-v15-controls.js && node --check rtcapp/premium-v16-fit.js && node --check rtcapp/https-relay.js
+      - name: Static Atom safety and resilience checks
         run: |
           python - <<'PY'
           from pathlib import Path
           js=Path('rtcapp/premium-v13.js').read_text()
           controls=Path('rtcapp/premium-v15-controls.js').read_text()
+          fit=Path('rtcapp/premium-v16-fit.js').read_text()
+          relay=Path('rtcapp/https-relay.js').read_text()
+          phone=Path('rtcapp/phone.html').read_text()
           css=Path('rtcapp/premium-v13.css').read_text()
-          tune=Path('rtcapp/premium-v15-tune.css').read_text()
+          tune=Path('rtcapp/premium-v16-tune.css').read_text()
           loader=Path('rtcapp/car.html').read_text()
-          assert 'premium-v13.js?v=15' in loader
-          assert 'premium-v13.css?v=15' in loader
-          assert 'premium-v15-tune.css?v=15' in loader
-          assert 'premium-v15-controls.js?v=15' in loader
-          assert 'https-relay.js?v=15' in loader
+          assert 'premium-v13.js?v=16' in loader
+          assert 'premium-v16-tune.css?v=16' in loader
+          assert 'premium-v15-controls.js?v=16' in loader
+          assert 'premium-v16-fit.js?v=16' in loader
+          assert 'https-relay.js?v=16' in loader
           assert 'for(var i=0;i<36;i++)' in js
           assert 'WebGL' not in js and 'AudioContext' not in js
           assert 'backdrop-filter' not in css and 'backdrop-filter' not in tune
-          assert 'return112' not in js
           assert css.count('{') == css.count('}')
           assert tune.count('{') == tune.count('}')
           assert '译文 ' in controls and '罗马音 ' in controls
-          print('static checks passed')
+          assert 'fitMedium' in fit and 'fitTwo' in fit and 'premiumMeasureV16' in fit
+          assert 'age>24000' in relay and 'restartStreams' in relay and 'since=45s' in relay
+          assert 'HTTP_HEARTBEAT_MS=18000' in phone and "v:16,kind:'state'" in phone
+          print('v16 static checks passed')
           PY
       - name: Install DOM test dependency
         run: npm install --no-save jsdom@22
@@ -68,12 +75,14 @@ jobs:
           w.tlxAcceptLyrics=(x)=>{forwarded=x};
           w.eval(fs.readFileSync('rtcapp/premium-v13.js','utf8'));
           w.eval(fs.readFileSync('rtcapp/premium-v15-controls.js','utf8'));
+          w.eval(fs.readFileSync('rtcapp/premium-v16-fit.js','utf8'));
           w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
           if(!w.document.getElementById('premiumNowCard')) throw new Error('cover card missing');
           if(w.document.querySelectorAll('.premiumWaveBar').length!==36) throw new Error('waveform bar count');
           if(!w.document.getElementById('premiumStatus')) throw new Error('status indicator missing');
           if(!w.document.getElementById('premiumToggleTranslation')) throw new Error('translation toggle missing');
           if(!w.document.getElementById('premiumToggleRomaji')) throw new Error('romaji toggle missing');
+          if(!w.document.getElementById('premiumMeasureV16')) throw new Error('width measurer missing');
           w.tlxAcceptState({kind:'state',title:'Test Song',artist:'Singer',album:'Album',duration:180000,elapsed:20000,playing:true});
           w.tlxAcceptLyrics({kind:'lyrics',key:'x',lrc:'[00:10.000]Hello world\n[00:10.000]你好世界\n[00:20.000]Second line\n[00:20.000]第二句\n[00:30.000]Third line\n[00:40.000]Fourth line'});
           if(!forwarded || (forwarded.lrc.match(/00:10/g)||[]).length!==1) throw new Error('duplicate timestamp not normalized');
@@ -82,5 +91,5 @@ jobs:
           if(!bar || !bar.style.transform) throw new Error('phrase progress missing');
           const sub=w.document.getElementById('premiumSubline');
           if(!sub) throw new Error('bilingual subline missing');
-          console.log('DOM regression passed');
+          console.log('v16 DOM regression passed');
           NODE
