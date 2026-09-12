@@ -1,0 +1,20 @@
+/* Tesla Lyrics v14 — slightly larger lyric typography, Atom-safe */
+.line.m2{font-size:20px!important}
+.line.m1{font-size:28px!important}
+.line.active{font-size:58px!important;height:105px!important}
+.line.active.long{font-size:46px!important;height:121px!important}
+.line.p1{font-size:30px!important}
+.line.p2{font-size:24px!important}
+.line.p3{font-size:20px!important}
+.line.m1.long,.line.p1.long{font-size:25px!important}
+.line.m2.long,.line.p2.long,.line.p3.long{font-size:19px!important}
+#premiumSubline{font-size:15px!important}
+.premiumRoman{font-size:13px!important}
+@media(max-height:650px){
+  .line.active{font-size:47px!important;height:79px!important}
+  .line.active.long{font-size:38px!important;height:94px!important}
+  .line.m1,.line.p1{font-size:23px!important}
+  .line.m2,.line.p2,.line.p3{font-size:18px!important}
+  #premiumSubline{font-size:13px!important}
+  .premiumRoman{font-size:11px!important}
+}
