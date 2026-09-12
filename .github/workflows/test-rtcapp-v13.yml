@@ -1,4 +1,4 @@
-name: Test TeslaLyrics v16 UI
+name: Test TeslaLyrics v17 UI
 on:
   push:
     paths:
@@ -22,7 +22,22 @@ jobs:
           node-version: '20'
       - name: JavaScript syntax
         run: node --check rtcapp/premium-v13.js && node --check rtcapp/premium-v15-controls.js && node --check rtcapp/premium-v16-fit.js && node --check rtcapp/https-relay.js
-      - name: Static Atom safety and resilience checks
+      - name: Inline relay syntax
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          for name in ['car.html','phone.html']:
+              text=Path('rtcapp/'+name).read_text()
+              blocks=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',text,re.S)
+              inline=[b for b in blocks if b.strip()]
+              if not inline: raise SystemExit('no inline script in '+name)
+              Path('/tmp/'+name+'.js').write_text(inline[-1])
+          PY
+          node --check /tmp/car.html.js
+          node --check /tmp/phone.html.js
+      - name: Static Atom safety and stale-state checks
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -34,11 +49,14 @@ jobs:
           css=Path('rtcapp/premium-v13.css').read_text()
           tune=Path('rtcapp/premium-v16-tune.css').read_text()
           loader=Path('rtcapp/car.html').read_text()
-          assert 'premium-v13.js?v=16' in loader
-          assert 'premium-v16-tune.css?v=16' in loader
-          assert 'premium-v15-controls.js?v=16' in loader
-          assert 'premium-v16-fit.js?v=16' in loader
-          assert 'https-relay.js?v=16' in loader
+          assert 'premium-v13.js?v=17' in loader
+          assert 'premium-v16-tune.css?v=17' in loader
+          assert 'premium-v15-controls.js?v=17' in loader
+          assert 'premium-v16-fit.js?v=17' in loader
+          assert 'https-relay.js?v=17' in loader
+          assert 'tlxClearRemoteState' in loader
+          assert 'Date.now()-stamp>90000' in loader
+          assert 'Date.now()-lastStateAt>55000' in loader
           assert 'for(var i=0;i<36;i++)' in js
           assert 'WebGL' not in js and 'AudioContext' not in js
           assert 'backdrop-filter' not in css and 'backdrop-filter' not in tune
@@ -47,8 +65,12 @@ jobs:
           assert '译文 ' in controls and '罗马音 ' in controls
           assert 'fitMedium' in fit and 'fitTwo' in fit and 'premiumMeasureV16' in fit
           assert 'age>24000' in relay and 'restartStreams' in relay and 'since=45s' in relay
-          assert 'HTTP_HEARTBEAT_MS=18000' in phone and "v:16,kind:'state'" in phone
-          print('v16 static checks passed')
+          assert 'now-stamp>90000' in relay and 'Number(env.v)>17' in relay
+          assert 'HTTP_HEARTBEAT_MS=18000' in phone
+          assert 'ANDROID_STATE_TTL_MS=45000' in phone
+          assert 'expireAndroidState' in phone and 'idleState' in phone
+          assert "v:17,kind:'state'" in phone
+          print('v17 stale-state static checks passed')
           PY
       - name: Install DOM test dependency
         run: npm install --no-save jsdom@22
@@ -91,6 +113,6 @@ jobs:
           if(!bar || !bar.style.transform) throw new Error('phrase progress missing');
           const sub=w.document.getElementById('premiumSubline');
           if(!sub) throw new Error('bilingual subline missing');
-          console.log('v16 DOM regression passed');
+          console.log('v17 DOM regression passed');
           w.close();
           NODE
