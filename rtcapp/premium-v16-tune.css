@@ -1,0 +1,39 @@
+/* Tesla Lyrics v16 — large, width-aware typography with safe two-line fallback */
+.line.m2{font-size:23px!important}
+.line.m1{font-size:33px!important}
+.line.active{font-size:68px!important;height:118px!important;line-height:1.06!important}
+.line.active.long{font-size:54px!important;height:128px!important}
+.line.p1{font-size:35px!important}
+.line.p2{font-size:28px!important}
+.line.p3{font-size:23px!important}
+.line.m1.long,.line.p1.long{font-size:30px!important}
+.line.m2.long,.line.p2.long,.line.p3.long{font-size:21px!important}
+.line.active .txt{display:block!important;max-width:100%!important;line-height:1.06!important;text-wrap:balance;word-break:normal;overflow-wrap:normal}
+.line.active.fitMedium{font-size:60px!important}
+.line.active.fitSmall{font-size:53px!important}
+.line.active.fitTiny{font-size:47px!important}
+.line.active.fitTwo{height:151px!important;align-items:center!important}
+.line.active.fitTwo .txt{white-space:normal!important;line-height:1.04!important}
+.line.active:not(.fitTwo) .txt{white-space:nowrap!important}
+#premiumSubline{font-size:18px!important;line-height:1.3!important;bottom:1px!important;color:rgba(255,255,255,.52)!important}
+.premiumRoman{font-size:15px!important;opacity:.68!important}
+#lyricsGroup{gap:13px!important}
+#premiumMeasureV16{position:fixed;left:-10000px;top:-10000px;visibility:hidden;white-space:nowrap;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","Microsoft YaHei",Arial,sans-serif;font-weight:790;letter-spacing:0;pointer-events:none}
+@media(max-height:650px){
+  .line.active{font-size:62px!important;height:96px!important}
+  .line.active.long{font-size:51px!important;height:106px!important}
+  .line.m1{font-size:30px!important}
+  .line.p1{font-size:32px!important}
+  .line.m2{font-size:23px!important}
+  .line.p2{font-size:25px!important}
+  .line.p3{font-size:21px!important}
+  .line.m1.long,.line.p1.long{font-size:27px!important}
+  .line.m2.long,.line.p2.long,.line.p3.long{font-size:20px!important}
+  .line.active.fitMedium{font-size:56px!important}
+  .line.active.fitSmall{font-size:50px!important}
+  .line.active.fitTiny{font-size:45px!important}
+  .line.active.fitTwo{height:128px!important}
+  #premiumSubline{font-size:16px!important}
+  .premiumRoman{font-size:13px!important}
+  #lyricsGroup{gap:9px!important}
+}
