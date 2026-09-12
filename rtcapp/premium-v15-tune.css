@@ -1,0 +1,33 @@
+/* Tesla Lyrics v15 — larger in-car typography + translation controls */
+.line.m2{font-size:22px!important}
+.line.m1{font-size:32px!important}
+.line.active{font-size:66px!important;height:116px!important}
+.line.active.long{font-size:52px!important;height:132px!important}
+.line.p1{font-size:34px!important}
+.line.p2{font-size:27px!important}
+.line.p3{font-size:22px!important}
+.line.m1.long,.line.p1.long{font-size:29px!important}
+.line.m2.long,.line.p2.long,.line.p3.long{font-size:21px!important}
+#premiumSubline{font-size:17px!important;line-height:1.28!important}
+.premiumRoman{font-size:14px!important}
+#premiumLyricOptions{display:flex;gap:7px;margin-top:8px}
+.premiumOptionBtn{height:32px;min-width:88px;padding:0 12px;border:0;border-radius:10px;background:rgba(255,255,255,.075);color:rgba(255,255,255,.88);font-size:12px;font-weight:650}
+.premiumOptionBtn.off{color:rgba(255,255,255,.45);background:rgba(255,255,255,.04)}
+body.hideTranslation #premiumSubline span:first-child:not(.premiumRoman){display:none!important}
+body.hideRomaji #premiumSubline .premiumRoman{display:none!important}
+@media(max-height:650px){
+  .line.active{font-size:58px!important;height:90px!important}
+  .line.active.long{font-size:48px!important;height:106px!important}
+  .line.m1{font-size:28px!important}
+  .line.p1{font-size:30px!important}
+  .line.m2{font-size:22px!important}
+  .line.p2{font-size:23px!important}
+  .line.p3{font-size:20px!important}
+  .line.m1.long,.line.p1.long{font-size:26px!important}
+  .line.m2.long,.line.p2.long,.line.p3.long{font-size:19px!important}
+  #premiumSubline{font-size:15px!important}
+  .premiumRoman{font-size:12px!important}
+  #lyricsGroup{gap:8px!important}
+  #premiumLyricOptions{margin-top:6px;gap:6px}
+  .premiumOptionBtn{height:29px;min-width:80px;font-size:11px}
+}
