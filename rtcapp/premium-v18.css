@@ -1,0 +1,41 @@
+/* Tesla Lyrics v18 — Atom-safe polish, visible progress, unified lyric controls */
+/* Make transport health authoritative without showing engineering text during normal playback. */
+body.v18Connected #premiumStatus{background:none!important;border:0!important;padding:0 4px!important}
+body.v18Connected #premiumStatusDot{background:#77d49a!important;box-shadow:0 0 0 3px rgba(119,212,154,.09)!important}
+body.v18Connected #premiumStatusText{display:none!important}
+
+/* Explicit progress rail under the waveform. Core renderClock owns .fill, so seek/progress stays visible even if premium animation is throttled. */
+#progressWrap .bar{inset:50% 0 auto 0!important;height:2px!important;opacity:1!important;background:rgba(255,255,255,.16)!important;border-radius:3px!important;overflow:hidden!important;pointer-events:none!important;transform:translateY(-50%)!important;z-index:0!important}
+#progressWrap .fill{height:100%!important;background:linear-gradient(90deg,hsla(var(--h1),88%,70%,.92),rgba(255,255,255,.96))!important;opacity:1!important}
+#premiumWave{z-index:2!important}
+#premiumWave:before{background:rgba(255,255,255,.07)!important;z-index:0!important}
+.premiumWaveBar{z-index:1!important;background:rgba(255,255,255,.28)!important;will-change:auto!important;transition:none!important}
+.premiumWaveBar.played{background:rgba(255,255,255,.90)!important}
+.premiumWaveBar.current{background:#fff!important;box-shadow:none!important}
+
+/* Translation / romaji controls: same language as the rest of the dock. */
+#premiumLyricOptions{display:flex;gap:8px;margin-top:8px}
+.premiumOptionBtn{flex:1;height:34px;border:0;border-radius:11px;background:rgba(255,255,255,.085);color:#fff;font-size:12px;font-weight:680;padding:0 12px}
+.premiumOptionBtn:active{background:rgba(255,255,255,.18)}
+.premiumOptionBtn.off{background:rgba(255,255,255,.035);color:rgba(255,255,255,.40)}
+body.hideTranslation #premiumSubline span:not(.premiumRoman){display:none!important}
+body.hideTranslation #premiumSubline .premiumRoman{margin-left:0!important}
+body.hideRomaji #premiumSubline .premiumRoman{display:none!important}
+body.hideTranslation.hideRomaji #premiumSubline{display:none!important}
+
+/* Atom tune: remove continuous transform work from the lyric block and shorten line-change animation. */
+.line.active{transform:none!important;will-change:auto!important}
+#lyricsGroup.stepA,#lyricsGroup.stepB{animation:v18LyricsFade .13s ease-out!important}
+.line.active.popA,.line.active.popB{animation:v18ActiveFade .13s ease-out!important}
+@keyframes v18LyricsFade{0%{opacity:.72}100%{opacity:1}}
+@keyframes v18ActiveFade{0%{opacity:.72}100%{opacity:1}}
+#premiumCoverA,#premiumCoverB{filter:blur(12px) saturate(1.13) brightness(.59)!important;will-change:auto!important}
+body.premiumNight #premiumCoverA,body.premiumNight #premiumCoverB{filter:blur(12px) saturate(1.00) brightness(.43)!important}
+body.premiumPaused #premiumCoverA,body.premiumPaused #premiumCoverB{filter:blur(12px) saturate(.94) brightness(.47)!important}
+
+@media(max-height:650px){
+  #premiumLyricOptions{margin-top:6px}
+  .premiumOptionBtn{height:30px;font-size:11px;border-radius:10px}
+  #progressWrap .bar{height:2px!important}
+  .premiumWaveBar{background:rgba(255,255,255,.31)!important}
+}
