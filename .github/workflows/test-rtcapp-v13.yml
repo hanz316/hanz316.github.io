@@ -1,15 +1,15 @@
-name: Test TeslaLyrics v18 UI
+name: Test TeslaLyrics v19 UI
 on:
   push:
     paths:
       - 'rtcapp/car.html'
       - 'rtcapp/premium-v13.js'
       - 'rtcapp/premium-v13.css'
-      - 'rtcapp/premium-v15-controls.js'
       - 'rtcapp/premium-v16-tune.css'
       - 'rtcapp/premium-v18.css'
       - 'rtcapp/premium-v18-fit.js'
       - 'rtcapp/premium-v18-health.js'
+      - 'rtcapp/premium-v19-noextras.js'
       - 'rtcapp/https-relay.js'
       - 'rtcapp/phone.html'
       - '.github/workflows/test-rtcapp-v13.yml'
@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: '20'
       - name: JavaScript syntax
-        run: node --check rtcapp/premium-v13.js && node --check rtcapp/premium-v15-controls.js && node --check rtcapp/premium-v18-fit.js && node --check rtcapp/premium-v18-health.js && node --check rtcapp/https-relay.js
+        run: node --check rtcapp/premium-v13.js && node --check rtcapp/premium-v18-fit.js && node --check rtcapp/premium-v18-health.js && node --check rtcapp/premium-v19-noextras.js && node --check rtcapp/https-relay.js
       - name: Inline relay syntax
         shell: bash
         run: |
@@ -39,25 +39,27 @@ jobs:
           PY
           node --check /tmp/car.html.js
           node --check /tmp/phone.html.js
-      - name: Static Atom, transport and controls checks
+      - name: Static Atom, transport and no-extras checks
         run: |
           python - <<'PY'
           from pathlib import Path
           js=Path('rtcapp/premium-v13.js').read_text()
-          controls=Path('rtcapp/premium-v15-controls.js').read_text()
           fit=Path('rtcapp/premium-v18-fit.js').read_text()
           health=Path('rtcapp/premium-v18-health.js').read_text()
+          noextras=Path('rtcapp/premium-v19-noextras.js').read_text()
           relay=Path('rtcapp/https-relay.js').read_text()
           phone=Path('rtcapp/phone.html').read_text()
           css=Path('rtcapp/premium-v13.css').read_text()
           tune=Path('rtcapp/premium-v16-tune.css').read_text()
           v18=Path('rtcapp/premium-v18.css').read_text()
           loader=Path('rtcapp/car.html').read_text()
-          assert 'premium-v13.js?v=18' in loader
-          assert 'premium-v18.css?v=18' in loader
-          assert 'premium-v18-fit.js?v=18' in loader
-          assert 'premium-v18-health.js?v=18' in loader
-          assert 'https-relay.js?v=18' in loader
+          assert 'premium-v13.js?v=19' in loader
+          assert 'premium-v18.css?v=19' in loader
+          assert 'premium-v18-fit.js?v=19' in loader
+          assert 'premium-v18-health.js?v=19' in loader
+          assert 'premium-v19-noextras.js?v=19' in loader
+          assert 'premium-v15-controls.js' not in loader
+          assert 'https-relay.js?v=19' in loader
           assert 'window.tlxAcceptState)window.tlxAcceptState(x)' in loader
           assert 'window.tlxAcceptLyrics)window.tlxAcceptLyrics(x)' in loader
           assert 'tlxClearRemoteState' in loader
@@ -68,15 +70,14 @@ jobs:
           assert css.count('{') == css.count('}')
           assert tune.count('{') == tune.count('}')
           assert v18.count('{') == v18.count('}')
-          assert '译文 ' in controls and '罗马音 ' in controls
-          assert 'hideTranslation' in v18 and 'hideRomaji' in v18 and 'premiumOptionBtn' in v18
+          assert 'delete y.translation' in noextras and 'delete y.romaji' in noextras
+          assert 'premiumSubline' in noextras and 'premiumLyricOptions' in noextras
           assert '#progressWrap .bar' in v18 and 'opacity:1!important' in v18
           assert 'MutationObserver' in fit and 'setInterval(function(){fit(false)},1800)' in fit
           assert 'v18Connected' in health and 'tlxRelayLastStateAt' in health
           assert 'Number(env.v)>17' in relay and "v:17,kind:'command'" in relay
           assert 'HTTP_HEARTBEAT_MS=18000' in phone and 'ANDROID_STATE_TTL_MS=45000' in phone
-          assert "v:17,kind:'state'" in phone
-          print('v18 static checks passed')
+          print('v19 static checks passed')
           PY
       - name: Install DOM test dependency
         run: npm install --no-save jsdom@22
@@ -102,29 +103,23 @@ jobs:
           w.tlxAcceptState=(x)=>{};
           w.tlxAcceptLyrics=(x)=>{forwarded=x};
           w.eval(fs.readFileSync('rtcapp/premium-v13.js','utf8'));
-          w.eval(fs.readFileSync('rtcapp/premium-v15-controls.js','utf8'));
           w.eval(fs.readFileSync('rtcapp/premium-v18-fit.js','utf8'));
           w.eval(fs.readFileSync('rtcapp/premium-v18-health.js','utf8'));
+          w.eval(fs.readFileSync('rtcapp/premium-v19-noextras.js','utf8'));
           w.document.dispatchEvent(new w.Event('DOMContentLoaded'));
           if(!w.document.getElementById('premiumNowCard')) throw new Error('cover card missing');
           if(w.document.querySelectorAll('.premiumWaveBar').length!==36) throw new Error('waveform bar count');
           if(!w.document.getElementById('premiumStatus')) throw new Error('status indicator missing');
-          const tBtn=w.document.getElementById('premiumToggleTranslation');
-          const rBtn=w.document.getElementById('premiumToggleRomaji');
-          if(!tBtn||!rBtn) throw new Error('lyric toggles missing');
-          tBtn.click();
-          if(!w.document.body.classList.contains('hideTranslation')) throw new Error('translation toggle does not apply');
-          tBtn.click();
-          if(w.document.body.classList.contains('hideTranslation')) throw new Error('translation toggle does not restore');
+          if(w.document.getElementById('premiumToggleTranslation')||w.document.getElementById('premiumToggleRomaji')) throw new Error('translation controls still present');
+          if(w.document.getElementById('premiumSubline')) throw new Error('translation/romaji subline still present');
           if(!w.document.getElementById('premiumMeasureV16')) throw new Error('width measurer missing');
           w.tlxAcceptState({kind:'state',title:'Test Song',artist:'Singer',album:'Album',duration:180000,elapsed:20000,playing:true});
-          w.tlxAcceptLyrics({kind:'lyrics',key:'x',lrc:'[00:10.000]Hello world\n[00:10.000]你好世界\n[00:20.000]Second line\n[00:20.000]第二句\n[00:30.000]Third line\n[00:40.000]Fourth line'});
-          if(!forwarded || (forwarded.lrc.match(/00:10/g)||[]).length!==1) throw new Error('duplicate timestamp not normalized');
+          w.tlxAcceptLyrics({kind:'lyrics',key:'x',lrc:'[00:10.000]Hello world\n[00:10.000]你好世界\n[00:20.000]Second line\n[00:20.000]第二句\n[00:30.000]Third line\n[00:40.000]Fourth line',translation:'x',romaji:'y'});
+          if(!forwarded || (forwarded.lrc.match(/00:10/g)||[]).length!==1) throw new Error('duplicate timestamp extras not stripped');
+          if(forwarded.translation||forwarded.romaji) throw new Error('extra lyric fields not stripped');
           if(typeof raf==='function') raf(1100);
           const bar=w.document.getElementById('premiumPhraseProgress');
           if(!bar || !bar.style.transform) throw new Error('phrase progress missing');
-          const sub=w.document.getElementById('premiumSubline');
-          if(!sub) throw new Error('bilingual subline missing');
-          console.log('v18 DOM regression passed');
+          console.log('v19 DOM regression passed');
           w.close();
           NODE
