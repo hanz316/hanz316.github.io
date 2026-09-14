@@ -1,0 +1,10 @@
+/* Tesla Lyrics v20 — smooth GPU-only lyric handoff for Intel Atom */
+#lyrics{position:relative!important;overflow:hidden!important}
+#lyricsGroup{position:relative!important;z-index:2!important}
+#lyricsGroup.stepA,#lyricsGroup.stepB,.line.active.popA,.line.active.popB{animation:none!important}
+#lyricsGroup.v20Incoming{will-change:transform,opacity!important}
+.v20Ghost{position:absolute!important;z-index:3!important;pointer-events:none!important;margin:0!important;will-change:transform,opacity!important;contain:layout style!important}
+.v20Ghost .line{pointer-events:none!important}
+.v20Ghost #premiumPhraseProgress,.v20Ghost #premiumSubline{display:none!important}
+body.v20ScrollBusy #premiumWave{opacity:.86!important}
+@media(max-height:650px){.v20Ghost{will-change:transform,opacity!important}}
