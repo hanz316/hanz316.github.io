@@ -1,0 +1,50 @@
+name: Quercus Radar APK build
+on:
+  push:
+    branches: [build/quercus-radar-apk]
+    paths:
+      - 'quercus-source.tar.xz'
+      - '.github/workflows/quercus-apk-build.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  android-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Unpack Android project
+        run: |
+          mkdir -p /tmp/quercus-radar-source
+          tar -xJf quercus-source.tar.xz -C /tmp/quercus-radar-source
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Android SDK platform
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.12'
+      - name: Compile debug APK
+        working-directory: /tmp/quercus-radar-source
+        run: gradle --no-daemon --stacktrace assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QuercusRadar-debug-apk
+          path: /tmp/quercus-radar-source/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - name: Make debug APK downloadable directly from GitHub
+        run: |
+          mkdir -p build-output
+          cp /tmp/quercus-radar-source/app/build/outputs/apk/debug/app-debug.apk build-output/QuercusRadar-debug.apk
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f build-output/QuercusRadar-debug.apk
+          git commit -m 'Build downloadable Quercus Radar debug APK [skip ci]' || exit 0
+          git push origin HEAD:build/quercus-radar-apk
