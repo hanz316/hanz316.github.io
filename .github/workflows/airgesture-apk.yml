@@ -1,13 +1,13 @@
-name: AirGesture APK cloud build
+name: AirGesture Fast Scroll v0.3 build
 on:
   push:
-    branches: [airgesture-apk-build]
+    branches: [airgesture-fast-scroll-v03]
     paths:
-      - 'airgesture/payload/**'
+      - 'airgesture/fast-scroll-patch/**'
       - '.github/workflows/airgesture-apk.yml'
   workflow_dispatch:
   pull_request:
-    branches: [airgesture-apk-build]
+    branches: [airgesture-fast-scroll-v03]
 
 permissions:
   contents: write
@@ -39,6 +39,32 @@ jobs:
           root = Path("airgesture/source/build.gradle.kts")
           root.write_text(root.read_text().replace("8.9.2", "8.10.1"))
           PY
+      - name: Apply verified Hand Landmarker fast-scroll patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat airgesture/fast-scroll-patch/{01,02,03}.txt | base64 -d > /tmp/fast-scroll-v03.tar.xz
+          echo '0afa01f59f77b8582ae70e1cb1579e02bcb4a79608c30f3ee255641cfb715451  /tmp/fast-scroll-v03.tar.xz' | sha256sum -c -
+          tar -xJf /tmp/fast-scroll-v03.tar.xz -C airgesture/source
+          python3 - <<'PY'
+          from pathlib import Path
+          root = Path("airgesture/source")
+          p = root / "app/build.gradle.kts"
+          s = p.read_text()
+          s = s.replace("gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task", "hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task")
+          s = s.replace("gesture_recognizer.task", "hand_landmarker.task")
+          s = s.replace("versionCode = 2", "versionCode = 3").replace('versionName = "0.2.0"', 'versionName = "0.3.0"')
+          p.write_text(s)
+          p = root / "app/src/main/java/dev/airgesture/GlobalControlService.kt"
+          p.write_text(p.read_text().replace("duration: Long = 330L", "duration: Long = 160L").replace("val displacement = h * 0.42f", "val displacement = h * 0.58f"))
+          p = root / "app/src/main/java/dev/airgesture/MainActivity.kt"
+          s = p.read_text()
+          s = s.replace("无接触，自由操控。", "空中手势 · 阅读模式")
+          s = s.replace("用前置摄像头捕捉手势，在其他应用内完成滑动、点击与返回。", "针对 ChatGPT 长回答优化上下滚动；仅在停车或乘客使用时启用。")
+          s = s.replace('"张开手掌，向左 / 右移动" to "左右滑动、切换页面",\n            "食指竖起" to "移动虚拟光标",\n            "拇指与食指捏合" to "在光标处点击 / 确认",\n            "双指 V 保持约 0.7 秒" to "返回上一页"', '"手掌停顿约 0.2 秒" to "重新允许下一次滚动",\n            "放下手掌再展开" to "重置滚动识别"')
+          s = s.replace("if (i < 5) addSpace(commands, 15)", "if (i < 3) addSpace(commands, 15)")
+          p.write_text(s)
+          PY
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -49,20 +75,20 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
-      - name: Build signed debug APK with offline recognition model
+      - name: Build signed debug APK with offline Hand Landmarker
         working-directory: airgesture/source
-        run: gradle --no-daemon :app:assembleDebug --stacktrace
+        run: gradle --no-daemon :app:assembleDebug :app:testDebugUnitTest --stacktrace
       - name: Inspect APK and bundled model
         shell: bash
         run: |
           set -euo pipefail
           test -s airgesture/source/app/build/outputs/apk/debug/app-debug.apk
-          test -s airgesture/source/app/src/main/assets/gesture_recognizer.task
+          test -s airgesture/source/app/src/main/assets/hand_landmarker.task
           sha256sum airgesture/source/app/build/outputs/apk/debug/app-debug.apk
           du -h airgesture/source/app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: AirGesture-v0.2.0-APK
+          name: AirGesture-v0.3.0-FastScroll-APK
           path: airgesture/source/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
       - name: Publish direct APK download to build branch
@@ -70,10 +96,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cp airgesture/source/app/build/outputs/apk/debug/app-debug.apk airgesture/AirGesture-v0.2.0-debug.apk
-          sha256sum airgesture/AirGesture-v0.2.0-debug.apk > airgesture/AirGesture-v0.2.0-debug.apk.sha256
+          cp airgesture/source/app/build/outputs/apk/debug/app-debug.apk airgesture/AirGesture-v0.3.0-fast-scroll-debug.apk
+          sha256sum airgesture/AirGesture-v0.3.0-fast-scroll-debug.apk > airgesture/AirGesture-v0.3.0-fast-scroll-debug.apk.sha256
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add airgesture/AirGesture-v0.2.0-debug.apk airgesture/AirGesture-v0.2.0-debug.apk.sha256
+          git add airgesture/AirGesture-v0.3.0-fast-scroll-debug.apk airgesture/AirGesture-v0.3.0-fast-scroll-debug.apk.sha256
           git commit -m 'Publish compiled AirGesture APK'
-          git push origin HEAD:airgesture-apk-build
+          git push origin HEAD:airgesture-fast-scroll-v03
