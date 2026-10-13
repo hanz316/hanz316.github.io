@@ -1,0 +1,1 @@
+diagnostic rebuild after Java namespace fix
