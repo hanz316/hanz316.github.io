@@ -1,0 +1,1 @@
+cloud compile check with Android SDK36 and AGP 8.10.1
