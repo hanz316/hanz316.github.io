@@ -26,6 +26,16 @@ jobs:
           cat airgesture/payload/{01,02,03,04,05,06,07,08}.txt | base64 -d > /tmp/airgesture-source.tar.xz
           echo 'a99541c9cbd2cc27d60f73260b203897a3e95f0ce54c6c7fba79ce1b335af7cb  /tmp/airgesture-source.tar.xz' | sha256sum -c -
           tar -xJf /tmp/airgesture-source.tar.xz -C airgesture/source
+      - name: Fix Gradle Kotlin DSL imports in original source
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("airgesture/source/app/build.gradle.kts")
+          s = p.read_text()
+          s = "import java.net.URI\nimport java.io.File\n" + s.replace("java.net.URI(", "URI(").replace("java.io.File(", "File(")
+          p.write_text(s)
+          PY
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
