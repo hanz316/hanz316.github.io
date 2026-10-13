@@ -1,13 +1,13 @@
-name: AirGesture Fast Scroll v0.3 build
+name: AirGesture Follow Scroll v0.4 build
 on:
   push:
-    branches: [airgesture-fast-scroll-v03]
+    branches: [airgesture-follow-scroll-v04]
     paths:
-      - 'airgesture/fast-scroll-patch/**'
+      - 'airgesture/follow-patch/**'
       - '.github/workflows/airgesture-apk.yml'
   workflow_dispatch:
   pull_request:
-    branches: [airgesture-fast-scroll-v03]
+    branches: [airgesture-follow-scroll-v04]
 
 permissions:
   contents: write
@@ -70,6 +70,16 @@ jobs:
           s = s.replace("if (i < 5) addSpace(commands, 15)", "if (i < 3) addSpace(commands, 15)")
           p.write_text(s)
           PY
+      - name: Restore AirGesture v0.4 follow-mode overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat airgesture/follow-patch/{01,02,03,04,05}.txt | base64 -d > /tmp/airgesture-v04.tar.xz
+          echo '65d73f9b1dbf7a3df8c5ba7c6e4fe22d96ed626dbe3906cea5e0a46799dce897  /tmp/airgesture-v04.tar.xz' | sha256sum -c -
+          tar -xJf /tmp/airgesture-v04.tar.xz -C airgesture/source
+          grep -q 'versionCode = 4' airgesture/source/app/build.gradle.kts
+          grep -q 'continueStroke' airgesture/source/app/src/main/java/dev/airgesture/GlobalControlService.kt
+          echo 'AirGesture v0.4 follow-scroll source applied'
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -80,7 +90,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
-      - name: Build signed debug APK with offline Hand Landmarker
+      - name: Build APK and JUnit suite for follow-scroll
         working-directory: airgesture/source
         run: gradle --no-daemon :app:assembleDebug :app:testDebugUnitTest --stacktrace
       - name: Inspect APK and bundled model
@@ -93,7 +103,7 @@ jobs:
           du -h airgesture/source/app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: AirGesture-v0.3.0-FastScroll-APK
+          name: AirGesture-v0.4.0-FollowScroll-APK
           path: airgesture/source/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
       - name: Publish direct APK download to build branch
@@ -101,10 +111,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cp airgesture/source/app/build/outputs/apk/debug/app-debug.apk airgesture/AirGesture-v0.3.0-fast-scroll-debug.apk
-          sha256sum airgesture/AirGesture-v0.3.0-fast-scroll-debug.apk > airgesture/AirGesture-v0.3.0-fast-scroll-debug.apk.sha256
+          cp airgesture/source/app/build/outputs/apk/debug/app-debug.apk airgesture/AirGesture-v0.4.0-follow-scroll-debug.apk
+          sha256sum airgesture/AirGesture-v0.4.0-follow-scroll-debug.apk > airgesture/AirGesture-v0.4.0-follow-scroll-debug.apk.sha256
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add airgesture/AirGesture-v0.3.0-fast-scroll-debug.apk airgesture/AirGesture-v0.3.0-fast-scroll-debug.apk.sha256
+          git add airgesture/AirGesture-v0.4.0-follow-scroll-debug.apk airgesture/AirGesture-v0.4.0-follow-scroll-debug.apk.sha256
           git commit -m 'Publish compiled AirGesture APK'
-          git push origin HEAD:airgesture-fast-scroll-v03
+          git push origin HEAD:airgesture-follow-scroll-v04
