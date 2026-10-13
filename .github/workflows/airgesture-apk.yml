@@ -49,6 +49,11 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           root = Path("airgesture/source")
+          p = root / "app/src/main/java/dev/airgesture/CameraGestureService.kt"
+          s = p.read_text()
+          s = s.replace("BaseOptions.Delegate", "Delegate")
+          s = s.replace("import com.google.mediapipe.tasks.core.BaseOptions\n", "import com.google.mediapipe.tasks.core.BaseOptions\nimport com.google.mediapipe.tasks.core.Delegate\n")
+          p.write_text(s)
           p = root / "app/build.gradle.kts"
           s = p.read_text()
           s = s.replace("gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task", "hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task")
